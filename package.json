@@ -1,0 +1,35 @@
+{
+  "name": "bohr-token",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "prettier": "prettier --write 'contracts/**/*.sol'",
+    "build": "npx hardhat compile",
+    "deploy_testnet_usdt": "npx hardhat --network bohr_test run scripts/testnet/bousdt.js",
+    "deploy_testnet_usdc": "npx hardhat --network bohr_test run scripts/testnet/bousdc.js",
+    "deploy_testnet_boweth": "npx hardhat --network bohr_test run scripts/testnet/boweth.js",
+    "usdc_transfer_testnet_eth": "npx hardhat --network bohr_test run scripts/testnet/usdt_transfer.js",
+    "usdt_transfer_testnet_eth": "npx hardhat --network bohr_test run scripts/testnet/usdc_transfer.js",
+    "wbot_transfer_testnet_eth": "npx hardhat --network bohr_test run scripts/testnet/wbot_transfer.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomiclabs/hardhat-waffle": "^2.0.6",
+    "@openzeppelin/hardhat-upgrades": "^1.26.0",
+    "chai": "^4.3.7",
+    "ethereum-waffle": "^4.0.10",
+    "ethers": "^5.7.2",
+    "hardhat": "^2.22.9",
+    "prettier-plugin-solidity": "^1.4.1"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.9.3",
+    "@openzeppelin/contracts-upgradeable": "^4.9.3",
+    "@openzeppelin/subgraphs": "^0.1.8-5"
+  }
+}
