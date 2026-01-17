@@ -48,4 +48,22 @@ VALUES ('SystemReward',
         'f',
         NULL,
         'f');
-COMMIT;
+
+
+INSERT INTO "public"."address_names" (
+    "address_hash",
+    "name",
+    "primary",
+    "inserted_at",
+    "updated_at",
+    "metadata"
+)
+VALUES
+    (
+        decode( '0000000000000000000000000000000000001002', 'hex' ),
+        'Bridge',
+        't',
+        '2026-01-17 08:59:19.795661',
+        '2026-01-17 08:59:19.795661',
+        NULL
+    );
