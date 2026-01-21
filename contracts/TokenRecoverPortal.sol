@@ -18,12 +18,7 @@ import "./lib/0.8.x/Utils.sol";
  * The BC users can recover the token from TokenHub after the merkle tree root is generated.
  * For more details, please refer to the BEP-299(https://github.com/bnb-chain/BEPs/pull/299).
  */
-contract TokenRecoverPortal is
-    SystemV2,
-    Initializable,
-    ReentrancyGuardUpgradeable,
-    Protectable
-{
+contract TokenRecoverPortal is SystemV2, Initializable, ReentrancyGuardUpgradeable, Protectable {
     using Utils for string;
     using Utils for bytes;
 
@@ -50,8 +45,7 @@ contract TokenRecoverPortal is
     }
 
     modifier approvalAddressInit() {
-        if (approvalAddress == address(0))
-            revert ApprovalAddressNotInitialized();
+        if (approvalAddress == address(0)) revert ApprovalAddressNotInitialized();
         _;
     }
 
@@ -77,21 +71,14 @@ contract TokenRecoverPortal is
 
     /*----------------- events -----------------*/
     // This event is triggered whenever a call to #recover succeeds.
-    event TokenRecoverRequested(
-        bytes ownerAddress,
-        bytes32 tokenSymbol,
-        address account,
-        uint256 amount
-    );
+    event TokenRecoverRequested(bytes ownerAddress, bytes32 tokenSymbol, address account, uint256 amount);
 
     /*----------------- init -----------------*/
     function initialize() external initializer onlyCoinbase onlyZeroGasPrice {
         __ReentrancyGuard_init_unchained();
 
         // Different address will be set depending on the environment
-        __Protectable_init_unchained(
-            0x08E68Ec70FA3b629784fDB28887e206ce8561E08
-        );
+        __Protectable_init_unchained(0x08E68Ec70FA3b629784fDB28887e206ce8561E08);
     }
 
     /**
@@ -99,7 +86,9 @@ contract TokenRecoverPortal is
      * @param node the leaf node of merkle tree.
      * @return the result of check.
      */
-    function isRecovered(bytes32 node) public view returns (bool) {
+    function isRecovered(
+        bytes32 node
+    ) public view returns (bool) {
         return recoveredMap[node];
     }
 
@@ -124,41 +113,25 @@ contract TokenRecoverPortal is
         bytes32[] calldata merkleProof
     ) external merkelRootReady approvalAddressInit whenNotPaused nonReentrant {
         // Recover the owner address and check signature.
-        bytes memory ownerAddr = _verifySecp256k1Sig(
-            ownerPubKey,
-            ownerSignature,
-            _tmSignatureHash(tokenSymbol, amount, msg.sender)
-        );
+        bytes memory ownerAddr =
+            _verifySecp256k1Sig(ownerPubKey, ownerSignature, _tmSignatureHash(tokenSymbol, amount, msg.sender));
         // Generate the leaf node of merkle tree.
-        bytes32 node = keccak256(
-            abi.encodePacked(ownerAddr, tokenSymbol, amount)
-        );
+        bytes32 node = keccak256(abi.encodePacked(ownerAddr, tokenSymbol, amount));
 
         // Check if the token is recovered.
         if (isRecovered(node)) revert AlreadyRecovered();
 
         // Verify the approval signature.
-        _verifyApprovalSig(
-            msg.sender,
-            ownerSignature,
-            approvalSignature,
-            node,
-            merkleProof
-        );
+        _verifyApprovalSig(msg.sender, ownerSignature, approvalSignature, node, merkleProof);
 
         // Verify the merkle proof.
-        if (!MerkleProof.verify(merkleProof, merkleRoot, node))
-            revert InvalidProof();
+        if (!MerkleProof.verify(merkleProof, merkleRoot, node)) revert InvalidProof();
 
         // Mark it recovered.
         recoveredMap[node] = true;
 
         // recover the token from TokenHub contract. it will be unlocked after 7 days.
-        ITokenHub(TOKEN_HUB_ADDR).recoverBCAsset(
-            tokenSymbol,
-            msg.sender,
-            amount
-        );
+        ITokenHub(TOKEN_HUB_ADDR).recoverBCAsset(tokenSymbol, msg.sender, amount);
 
         emit TokenRecoverRequested(ownerAddr, tokenSymbol, msg.sender, amount);
     }
@@ -179,25 +152,13 @@ contract TokenRecoverPortal is
             buffer = abi.encodePacked(buffer, merkleProof[i]);
         }
         // Perform the approvalSignature recovery and ensure the recovered signer is the approval account
-        bytes32 hash = keccak256(
-            abi.encodePacked(
-                SOURCE_CHAIN_ID,
-                account,
-                ownerSignature,
-                leafHash,
-                merkleRoot,
-                buffer
-            )
-        );
+        bytes32 hash =
+            keccak256(abi.encodePacked(SOURCE_CHAIN_ID, account, ownerSignature, leafHash, merkleRoot, buffer));
 
-        if (recover(approvalSignature, hash) != approvalAddress)
-            revert InvalidApprovalSignature();
+        if (recover(approvalSignature, hash) != approvalAddress) revert InvalidApprovalSignature();
     }
 
-    function recover(
-        bytes memory sig,
-        bytes32 hash
-    ) internal pure returns (address) {
+    function recover(bytes memory sig, bytes32 hash) internal pure returns (address) {
         // Ensure the signature length is correct
         if (sig.length != 65) revert InvalidApprovalSignature();
         bytes32 r;
@@ -210,7 +171,7 @@ contract TokenRecoverPortal is
         }
         if (v < 27) v += 27;
         if (v < 27 || v > 28) revert InvalidApprovalSignature();
-        (address signer, ) = ECDSA.tryRecover(hash, v, r, s);
+        (address signer,) = ECDSA.tryRecover(hash, v, r, s);
         return signer;
     }
 
@@ -246,18 +207,7 @@ contract TokenRecoverPortal is
             // | recovered address  |
             // | 20 bytes |
             let len := mload(input)
-            if iszero(
-                staticcall(
-                    not(0),
-                    0x69,
-                    add(input, 0x20),
-                    len,
-                    add(output, 0x20),
-                    20
-                )
-            ) {
-                revert(0, 0)
-            }
+            if iszero(staticcall(not(0), 0x69, add(input, 0x20), len, add(output, 0x20), 20)) { revert(0, 0) }
         }
 
         // return the recovered address
@@ -268,25 +218,20 @@ contract TokenRecoverPortal is
      * tmSignatureHash is used to generate the hash of the owner signature.
      * @dev The hash is used to verify the signature from BC token owner.
      */
-    function _tmSignatureHash(
-        bytes32 tokenSymbol,
-        uint256 amount,
-        address recipient
-    ) internal pure returns (bytes32) {
-        return
-            sha256(
-                abi.encodePacked(
-                    '{"account_number":"0","chain_id":"',
-                    SOURCE_CHAIN_ID,
-                    '","data":null,"memo":"","msgs":[{"amount":"',
-                    Utils.bytesToHex(abi.encodePacked(amount), false),
-                    '","recipient":"',
-                    Utils.bytesToHex(abi.encodePacked(recipient), true),
-                    '","token_symbol":"',
-                    Utils.bytesToHex(abi.encodePacked(tokenSymbol), false),
-                    '"}],"sequence":"0","source":"0"}'
-                )
-            );
+    function _tmSignatureHash(bytes32 tokenSymbol, uint256 amount, address recipient) internal pure returns (bytes32) {
+        return sha256(
+            abi.encodePacked(
+                '{"account_number":"0","chain_id":"',
+                SOURCE_CHAIN_ID,
+                '","data":null,"memo":"","msgs":[{"amount":"',
+                Utils.bytesToHex(abi.encodePacked(amount), false),
+                '","recipient":"',
+                Utils.bytesToHex(abi.encodePacked(recipient), true),
+                '","token_symbol":"',
+                Utils.bytesToHex(abi.encodePacked(tokenSymbol), false),
+                '"}],"sequence":"0","source":"0"}'
+            )
+        );
     }
 
     /**
@@ -295,15 +240,11 @@ contract TokenRecoverPortal is
      * @param key is the key of the parameter.
      * @param value is the value of the parameter.
      */
-    function updateParam(
-        string calldata key,
-        bytes calldata value
-    ) external onlyGov {
+    function updateParam(string calldata key, bytes calldata value) external onlyGov {
         if (key.compareStrings("approvalAddress")) {
             if (value.length != 20) revert InvalidValue(key, value);
             address newApprovalAddress = value.bytesToAddress(20);
-            if (newApprovalAddress == address(0))
-                revert InvalidValue(key, value);
+            if (newApprovalAddress == address(0)) revert InvalidValue(key, value);
             approvalAddress = newApprovalAddress;
         } else if (key.compareStrings("merkleRoot")) {
             if (merkleRootAlreadyInit) revert MerkleRootAlreadyInitiated();
@@ -315,8 +256,7 @@ contract TokenRecoverPortal is
         } else if (key.compareStrings("tokenRecoverPortalProtector")) {
             if (value.length != 20) revert InvalidValue(key, value);
             address newTokenRecoverPortalProtector = value.bytesToAddress(20);
-            if (newTokenRecoverPortalProtector == address(0))
-                revert InvalidValue(key, value);
+            if (newTokenRecoverPortalProtector == address(0)) revert InvalidValue(key, value);
             _setProtector(newTokenRecoverPortalProtector);
         } else {
             revert UnknownParam(key, value);
@@ -330,10 +270,7 @@ contract TokenRecoverPortal is
      * @param tokenSymbol is the symbol of token.
      * @param attacker is the address of the attacker.
      */
-    function cancelTokenRecover(
-        bytes32 tokenSymbol,
-        address attacker
-    ) external onlyProtector {
+    function cancelTokenRecover(bytes32 tokenSymbol, address attacker) external onlyProtector {
         ITokenHub(TOKEN_HUB_ADDR).cancelTokenRecoverLock(tokenSymbol, attacker);
     }
 }

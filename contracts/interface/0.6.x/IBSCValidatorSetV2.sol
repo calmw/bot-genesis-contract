@@ -5,8 +5,6 @@ interface IBSCValidatorSetV2 {
     function felony(address validator) external;
     function isCurrentValidator(address validator) external view returns (bool);
 
-    function currentValidatorSetMap(
-        address validator
-    ) external view returns (uint256);
+    function currentValidatorSetMap(address validator) external view returns (uint256);
     function numOfCabinets() external view returns (uint256);
 }

@@ -20,12 +20,7 @@ contract BSCTimelock is SystemV2, Initializable, TimelockControllerUpgradeable {
     function initialize() external initializer onlyCoinbase onlyZeroGasPrice {
         address[] memory _governor = new address[](1);
         _governor[0] = GOVERNOR_ADDR;
-        __TimelockController_init(
-            INIT_MINIMAL_DELAY,
-            _governor,
-            _governor,
-            GOVERNOR_ADDR
-        );
+        __TimelockController_init(INIT_MINIMAL_DELAY, _governor, _governor, GOVERNOR_ADDR);
     }
 
     /*----------------- system functions -----------------*/
@@ -33,15 +28,11 @@ contract BSCTimelock is SystemV2, Initializable, TimelockControllerUpgradeable {
      * @param key the key of the param
      * @param value the value of the param
      */
-    function updateParam(
-        string calldata key,
-        bytes calldata value
-    ) external onlyGov {
+    function updateParam(string calldata key, bytes calldata value) external onlyGov {
         if (key.compareStrings("minDelay")) {
             if (value.length != 32) revert InvalidValue(key, value);
             uint256 newMinDelay = value.bytesToUint256(32);
-            if (newMinDelay == 0 || newMinDelay > 14 days)
-                revert InvalidValue(key, value);
+            if (newMinDelay == 0 || newMinDelay > 14 days) revert InvalidValue(key, value);
             this.updateDelay(newMinDelay);
         } else {
             revert UnknownParam(key, value);

@@ -11,11 +11,7 @@ library Memory {
     // Compares the 'len' bytes starting at address 'addr' in memory with the 'len'
     // bytes starting at 'addr2'.
     // Returns 'true' if the bytes are the same, otherwise 'false'.
-    function equals(
-        uint256 addr,
-        uint256 addr2,
-        uint256 len
-    ) internal pure returns (bool equal) {
+    function equals(uint256 addr, uint256 addr2, uint256 len) internal pure returns (bool equal) {
         assembly {
             equal := eq(keccak256(addr, len), keccak256(addr2, len))
         }
@@ -25,11 +21,7 @@ library Memory {
     // 'bts'. It is allowed to set 'len' to a lower value then 'bts.length', in which case only
     // the first 'len' bytes will be compared.
     // Requires that 'bts.length >= len'
-    function equals(
-        uint256 addr,
-        uint256 len,
-        bytes memory bts
-    ) internal pure returns (bool equal) {
+    function equals(uint256 addr, uint256 len, bytes memory bts) internal pure returns (bool equal) {
         require(bts.length >= len);
         uint256 addr2;
         assembly {
@@ -38,12 +30,8 @@ library Memory {
         return equals(addr, addr2, len);
     }
 
-    function compareStrings(
-        string memory a,
-        string memory b
-    ) internal pure returns (bool) {
-        return (keccak256(abi.encodePacked((a))) ==
-            keccak256(abi.encodePacked((b))));
+    function compareStrings(string memory a, string memory b) internal pure returns (bool) {
+        return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
     }
 
     // Copy 'len' bytes from memory address 'src', to address 'dest'.
@@ -84,9 +72,7 @@ library Memory {
 
     // This function does the same as 'dataPtr(bytes memory)', but will also return the
     // length of the provided bytes array.
-    function fromBytes(
-        bytes memory bts
-    ) internal pure returns (uint256 addr, uint256 len) {
+    function fromBytes(bytes memory bts) internal pure returns (uint256 addr, uint256 len) {
         len = bts.length;
         assembly {
             addr := add(bts, /*BYTES_HEADER_SIZE*/ 32)
@@ -96,10 +82,7 @@ library Memory {
     // Creates a 'bytes memory' variable from the memory address 'addr', with the
     // length 'len'. The function will allocate new memory for the bytes array, and
     // the 'len bytes starting at 'addr' will be copied into that new memory.
-    function toBytes(
-        uint256 addr,
-        uint256 len
-    ) internal pure returns (bytes memory bts) {
+    function toBytes(uint256 addr, uint256 len) internal pure returns (bytes memory bts) {
         bts = new bytes(len);
         uint256 btsptr;
         assembly {

@@ -32,8 +32,8 @@ contract Staking is IStaking, System, IParamSubscriber, IApplication {
     mapping(address => uint256) undelegateInFly; // delegator => undelegate request in fly
     mapping(address => uint256) redelegateInFly; // delegator => redelegate request in fly
 
-    uint256 internal leftIndex; // @dev deprecated
-    uint256 internal rightIndex; // @dev deprecated
+    uint256 internal leftIndex;  // @dev deprecated
+    uint256 internal rightIndex;  // @dev deprecated
     uint8 internal locked;
 
     uint256 public transferGas; // this param is newly added after the hardfork on testnet. It need to be initialed by governed
@@ -46,10 +46,7 @@ contract Staking is IStaking, System, IParamSubscriber, IApplication {
     }
 
     modifier tenDecimalPrecision(uint256 amount) {
-        require(
-            msg.value % TEN_DECIMALS == 0 && amount % TEN_DECIMALS == 0,
-            "precision loss in conversion"
-        );
+        require(msg.value % TEN_DECIMALS == 0 && amount % TEN_DECIMALS == 0, "precision loss in conversion");
         _;
     }
 
@@ -67,98 +64,45 @@ contract Staking is IStaking, System, IParamSubscriber, IApplication {
     /*----------------- Events -----------------*/
     event rewardClaimed(address indexed delegator, uint256 amount);
 
-    event delegateSubmitted(
-        address indexed delegator,
-        address indexed validator,
-        uint256 amount,
-        uint256 relayerFee
-    ); // @dev deprecated
-    event undelegateSubmitted(
-        address indexed delegator,
-        address indexed validator,
-        uint256 amount,
-        uint256 relayerFee
-    ); // @dev deprecated
+    event delegateSubmitted(address indexed delegator, address indexed validator, uint256 amount, uint256 relayerFee);  // @dev deprecated
+    event undelegateSubmitted(address indexed delegator, address indexed validator, uint256 amount, uint256 relayerFee);  // @dev deprecated
     event redelegateSubmitted(
         address indexed delegator,
         address indexed validatorSrc,
         address indexed validatorDst,
         uint256 amount,
         uint256 relayerFee
-    ); // @dev deprecated
-    event rewardReceived(address indexed delegator, uint256 amount); // @dev deprecated
-    event undelegatedReceived(
-        address indexed delegator,
-        address indexed validator,
-        uint256 amount
-    ); // @dev deprecated
+    );  // @dev deprecated
+    event rewardReceived(address indexed delegator, uint256 amount);  // @dev deprecated
+    event undelegatedReceived(address indexed delegator, address indexed validator, uint256 amount);  // @dev deprecated
     event undelegatedClaimed(address indexed delegator, uint256 amount);
-    event delegateSuccess(
-        address indexed delegator,
-        address indexed validator,
-        uint256 amount
-    ); // @dev deprecated
-    event undelegateSuccess(
-        address indexed delegator,
-        address indexed validator,
-        uint256 amount
-    ); // @dev deprecated
-    event redelegateSuccess(
-        address indexed delegator,
-        address indexed valSrc,
-        address indexed valDst,
-        uint256 amount
-    ); // @dev deprecated
-    event delegateFailed(
-        address indexed delegator,
-        address indexed validator,
-        uint256 amount,
-        uint8 errCode
-    ); // @dev deprecated
-    event undelegateFailed(
-        address indexed delegator,
-        address indexed validator,
-        uint256 amount,
-        uint8 errCode
-    ); // @dev deprecated
+    event delegateSuccess(address indexed delegator, address indexed validator, uint256 amount);  // @dev deprecated
+    event undelegateSuccess(address indexed delegator, address indexed validator, uint256 amount);  // @dev deprecated
+    event redelegateSuccess(address indexed delegator, address indexed valSrc, address indexed valDst, uint256 amount);  // @dev deprecated
+    event delegateFailed(address indexed delegator, address indexed validator, uint256 amount, uint8 errCode);  // @dev deprecated
+    event undelegateFailed(address indexed delegator, address indexed validator, uint256 amount, uint8 errCode);  // @dev deprecated
     event redelegateFailed(
-        address indexed delegator,
-        address indexed valSrc,
-        address indexed valDst,
-        uint256 amount,
-        uint8 errCode
-    ); // @dev deprecated
-    event paramChange(string key, bytes value); // @dev deprecated
-    event failedSynPackage(uint8 indexed eventType, uint256 errCode); // @dev deprecated
-    event crashResponse(uint8 indexed eventType); // @dev deprecated
+        address indexed delegator, address indexed valSrc, address indexed valDst, uint256 amount, uint8 errCode
+    );  // @dev deprecated
+    event paramChange(string key, bytes value);  // @dev deprecated
+    event failedSynPackage(uint8 indexed eventType, uint256 errCode);  // @dev deprecated
+    event crashResponse(uint8 indexed eventType);  // @dev deprecated
 
-    receive() external payable {}
+    receive() external payable { }
 
     /*----------------- Implement cross chain app -----------------*/
     function handleSynPackage(
         uint8,
         bytes calldata msgBytes
-    )
-        external
-        override
-        onlyCrossChainContract
-        initParams
-        returns (bytes memory)
-    {
+    ) external override onlyCrossChainContract initParams returns (bytes memory) {
         revert("deprecated");
     }
 
-    function handleAckPackage(
-        uint8,
-        bytes calldata msgBytes
-    ) external override onlyCrossChainContract initParams {
+    function handleAckPackage(uint8, bytes calldata msgBytes) external override onlyCrossChainContract initParams {
         revert("deprecated");
     }
 
-    function handleFailAckPackage(
-        uint8,
-        bytes calldata msgBytes
-    ) external override onlyCrossChainContract initParams {
+    function handleFailAckPackage(uint8, bytes calldata msgBytes) external override onlyCrossChainContract initParams {
         revert("deprecated");
     }
 
@@ -179,14 +123,7 @@ contract Staking is IStaking, System, IParamSubscriber, IApplication {
     function undelegate(
         address validator,
         uint256 amount
-    )
-        external
-        payable
-        override
-        noReentrant
-        tenDecimalPrecision(amount)
-        initParams
-    {
+    ) external payable override noReentrant tenDecimalPrecision(amount) initParams {
         revert("deprecated");
     }
 
@@ -201,17 +138,12 @@ contract Staking is IStaking, System, IParamSubscriber, IApplication {
      * @dev claim delegated reward from BC staking
      *
      */
-    function claimReward()
-        external
-        override
-        noReentrant
-        returns (uint256 amount)
-    {
+    function claimReward() external override noReentrant returns (uint256 amount) {
         amount = distributedReward[msg.sender];
         require(amount > 0, "no pending reward");
 
         distributedReward[msg.sender] = 0;
-        (bool success, ) = msg.sender.call{gas: transferGas, value: amount}("");
+        (bool success,) = msg.sender.call{ gas: transferGas, value: amount }("");
         require(success, "transfer failed");
         emit rewardClaimed(msg.sender, amount);
     }
@@ -220,37 +152,25 @@ contract Staking is IStaking, System, IParamSubscriber, IApplication {
      * @dev claim undelegated BNB from BC staking
      *
      */
-    function claimUndelegated()
-        external
-        override
-        noReentrant
-        returns (uint256 amount)
-    {
+    function claimUndelegated() external override noReentrant returns (uint256 amount) {
         amount = undelegated[msg.sender];
         require(amount > 0, "no undelegated funds");
 
         undelegated[msg.sender] = 0;
-        (bool success, ) = msg.sender.call{gas: transferGas, value: amount}("");
+        (bool success,) = msg.sender.call{ gas: transferGas, value: amount }("");
         require(success, "transfer failed");
         emit undelegatedClaimed(msg.sender, amount);
     }
 
-    function getDelegated(
-        address delegator,
-        address validator
-    ) external view override returns (uint256) {
+    function getDelegated(address delegator, address validator) external view override returns (uint256) {
         return delegatedOfValidator[delegator][validator];
     }
 
-    function getTotalDelegated(
-        address delegator
-    ) external view override returns (uint256) {
+    function getTotalDelegated(address delegator) external view override returns (uint256) {
         return delegated[delegator];
     }
 
-    function getDistributedReward(
-        address delegator
-    ) external view override returns (uint256) {
+    function getDistributedReward(address delegator) external view override returns (uint256) {
         return distributedReward[delegator];
     }
 
@@ -262,16 +182,11 @@ contract Staking is IStaking, System, IParamSubscriber, IApplication {
         return pendingRedelegateTime[delegator][valSrc][valDst];
     }
 
-    function getUndelegated(
-        address delegator
-    ) external view override returns (uint256) {
+    function getUndelegated(address delegator) external view override returns (uint256) {
         return undelegated[delegator];
     }
 
-    function getPendingUndelegateTime(
-        address delegator,
-        address validator
-    ) external view override returns (uint256) {
+    function getPendingUndelegateTime(address delegator, address validator) external view override returns (uint256) {
         return pendingUndelegateTime[delegator][validator];
     }
 
@@ -283,9 +198,7 @@ contract Staking is IStaking, System, IParamSubscriber, IApplication {
         return minDelegation;
     }
 
-    function getRequestInFly(
-        address delegator
-    ) external view override returns (uint256[3] memory) {
+    function getRequestInFly(address delegator) external view override returns (uint256[3] memory) {
         uint256[3] memory request;
         request[0] = delegateInFly[delegator];
         request[1] = undelegateInFly[delegator];
@@ -296,10 +209,7 @@ contract Staking is IStaking, System, IParamSubscriber, IApplication {
     /*----------------- Internal functions -----------------*/
 
     /*----------------- Param update -----------------*/
-    function updateParam(
-        string calldata key,
-        bytes calldata value
-    ) external override onlyInit onlyGov {
+    function updateParam(string calldata key, bytes calldata value) external override onlyInit onlyGov {
         revert("deprecated");
     }
 }

@@ -21,8 +21,5 @@ interface ITokenRecoverPortal {
         bytes32[] calldata merkleProof
     ) external;
     // Cancel the user token recover request by the assetProtector.
-    function cancelTokenRecover(
-        bytes32 tokenSymbol,
-        address recipient
-    ) external;
+    function cancelTokenRecover(bytes32 tokenSymbol, address recipient) external;
 }

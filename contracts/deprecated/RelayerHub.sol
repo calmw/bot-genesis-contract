@@ -25,12 +25,12 @@ contract RelayerHub is IRelayerHub, System, IParamSubscriber {
     }
 
     mapping(address => bool) relayManagersExistMap;
-    mapping(address => address) managerToRelayer; // @dev deprecated
+    mapping(address => address) managerToRelayer;  // @dev deprecated
     mapping(address => bool) currentRelayers;
     mapping(address => bool) provisionalRelayers;
-    mapping(address => address) managerToProvisionalRelayer; // @dev deprecated
+    mapping(address => address) managerToProvisionalRelayer;  // @dev deprecated
 
-    bool public whitelistInitDone; // @dev deprecated
+    bool public whitelistInitDone;  // @dev deprecated
 
     modifier onlyManager() {
         require(relayManagersExistMap[msg.sender], "manager does not exist");
@@ -43,20 +43,17 @@ contract RelayerHub is IRelayerHub, System, IParamSubscriber {
     }
 
     modifier onlyProvisionalRelayer() {
-        require(
-            provisionalRelayers[msg.sender],
-            "relayer is not a provisional relayer"
-        );
+        require(provisionalRelayers[msg.sender], "relayer is not a provisional relayer");
         _;
     }
 
     event relayerUnRegister(address _relayer);
 
-    event paramChange(string key, bytes value); // @dev deprecated
-    event managerRemoved(address _removedManager); // @dev deprecated
-    event managerAdded(address _addedManager); // @dev deprecated
-    event relayerUpdated(address _from, address _to); // @dev deprecated
-    event relayerAddedProvisionally(address _relayer); // @dev deprecated
+    event paramChange(string key, bytes value);  // @dev deprecated
+    event managerRemoved(address _removedManager);  // @dev deprecated
+    event managerAdded(address _addedManager);  // @dev deprecated
+    event relayerUpdated(address _from, address _to);  // @dev deprecated
+    event relayerAddedProvisionally(address _relayer);  // @dev deprecated
 
     function init() external onlyNotInit {
         requiredDeposit = INIT_REQUIRED_DEPOSIT;
@@ -79,10 +76,7 @@ contract RelayerHub is IRelayerHub, System, IParamSubscriber {
     }
 
     /*----------------- Param update -----------------*/
-    function updateParam(
-        string calldata key,
-        bytes calldata value
-    ) external override onlyInit onlyGov {
+    function updateParam(string calldata key, bytes calldata value) external override onlyInit onlyGov {
         revert("deprecated");
     }
 
@@ -98,21 +92,15 @@ contract RelayerHub is IRelayerHub, System, IParamSubscriber {
 
     // acceptBeingRelayer needs to be called by the relayer after being added provisionally.
     // This 2 step process of relayer updating is required to avoid having a contract as a relayer.
-    function acceptBeingRelayer(
-        address manager
-    ) external onlyProvisionalRelayer {
+    function acceptBeingRelayer(address manager) external onlyProvisionalRelayer {
         revert("deprecated");
     }
 
-    function isRelayer(
-        address relayerAddress
-    ) external view override returns (bool) {
+    function isRelayer(address relayerAddress) external view override returns (bool) {
         return currentRelayers[relayerAddress];
     }
 
-    function isProvisionalRelayer(
-        address relayerAddress
-    ) external view returns (bool) {
+    function isProvisionalRelayer(address relayerAddress) external view returns (bool) {
         return provisionalRelayers[relayerAddress];
     }
 

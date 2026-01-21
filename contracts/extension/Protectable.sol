@@ -21,10 +21,7 @@ abstract contract Protectable is Initializable {
     /*----------------- events -----------------*/
     event Paused();
     event Resumed();
-    event ProtectorChanged(
-        address indexed oldProtector,
-        address indexed newProtector
-    );
+    event ProtectorChanged(address indexed oldProtector, address indexed newProtector);
     event BlackListed(address indexed target);
     event UnBlackListed(address indexed target);
 
@@ -54,9 +51,7 @@ abstract contract Protectable is Initializable {
         __Protectable_init_unchained(protector);
     }
 
-    function __Protectable_init_unchained(
-        address protector
-    ) internal onlyInitializing {
+    function __Protectable_init_unchained(address protector) internal onlyInitializing {
         _protector = protector;
     }
 
@@ -95,9 +90,7 @@ abstract contract Protectable is Initializable {
     /**
      * @dev Remove an address from the black list
      */
-    function removeFromBlackList(
-        address account
-    ) external virtual onlyProtector {
+    function removeFromBlackList(address account) external virtual onlyProtector {
         delete blackList[account];
         emit UnBlackListed(account);
     }

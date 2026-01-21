@@ -16,9 +16,7 @@ library MerkleProof {
 
         // | storeName | key length | key | value length | value | appHash  | proof |
         // | 32 bytes  | 32 bytes   |   | 32 bytes   |     | 32 bytes |
-        bytes memory input = new bytes(
-            128 + key.length + value.length + proof.length
-        );
+        bytes memory input = new bytes(128 + key.length + value.length + proof.length);
 
         uint256 ptr = Memory.dataPtr(input);
 
@@ -70,7 +68,7 @@ library MerkleProof {
         assembly {
             // call validateMerkleProof precompile contract
             // Contract address: 0x65
-            if iszero(staticcall(not(0), 0x65, input, length, result, 0x20)) {}
+            if iszero(staticcall(not(0), 0x65, input, length, result, 0x20)) { }
         }
 
         return result[0] == 0x01;

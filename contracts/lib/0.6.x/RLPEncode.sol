@@ -9,9 +9,7 @@ library RLPEncode {
      * @param self The string (ie. byte array) item to encode
      * @return The RLP encoded string in bytes
      */
-    function encodeBytes(
-        bytes memory self
-    ) internal pure returns (bytes memory) {
+    function encodeBytes(bytes memory self) internal pure returns (bytes memory) {
         if (self.length == 1 && self[0] <= 0x7f) {
             return self;
         }
@@ -27,10 +25,7 @@ library RLPEncode {
         bytes memory b;
         assembly {
             let m := mload(0x40)
-            mstore(
-                add(m, 20),
-                xor(0x140000000000000000000000000000000000000000, self)
-            )
+            mstore(add(m, 20), xor(0x140000000000000000000000000000000000000000, self))
             mstore(0x40, add(m, 52))
             b := m
         }
@@ -71,9 +66,7 @@ library RLPEncode {
      * @param self The list of items to encode, each item in list must be already encoded
      * @return The RLP encoded list of items in bytes
      */
-    function encodeList(
-        bytes[] memory self
-    ) internal pure returns (bytes memory) {
+    function encodeList(bytes[] memory self) internal pure returns (bytes memory) {
         if (self.length == 0) {
             return new bytes(0);
         }
@@ -90,10 +83,7 @@ library RLPEncode {
      * @param _postBytes The second bytes array
      * @return The merged bytes array
      */
-    function mergeBytes(
-        bytes memory _preBytes,
-        bytes memory _postBytes
-    ) internal pure returns (bytes memory) {
+    function mergeBytes(bytes memory _preBytes, bytes memory _postBytes) internal pure returns (bytes memory) {
         bytes memory tempBytes;
 
         assembly {
@@ -141,14 +131,10 @@ library RLPEncode {
             // length of the arrays.
             end := add(mc, length)
 
-            for {
-                let cc := add(_postBytes, 0x20)
-            } lt(mc, end) {
+            for { let cc := add(_postBytes, 0x20) } lt(mc, end) {
                 mc := add(mc, 0x20)
                 cc := add(cc, 0x20)
-            } {
-                mstore(mc, mload(cc))
-            }
+            } { mstore(mc, mload(cc)) }
 
             // Update the free-memory pointer by padding our last write location
             // to 32 bytes: add 31 bytes to the end of tempBytes to move to the
@@ -173,10 +159,7 @@ library RLPEncode {
      * @param offset `STRING_OFFSET` if item is string, `LIST_OFFSET` if item is list
      * @return RLP encoded bytes
      */
-    function encodeLength(
-        uint256 length,
-        uint256 offset
-    ) internal pure returns (bytes memory) {
+    function encodeLength(uint256 length, uint256 offset) internal pure returns (bytes memory) {
         require(length < 256 ** 8, "input too long");
         bytes memory rs = new bytes(1);
         if (length <= 55) {
@@ -199,17 +182,9 @@ library RLPEncode {
             mstore(add(b, 32), x)
         }
         uint256 i;
-        if (
-            x &
-                0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000 ==
-            0
-        ) {
+        if (x & 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000 == 0) {
             i = 24;
-        } else if (
-            x &
-                0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 ==
-            0
-        ) {
+        } else if (x & 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 == 0) {
             i = 16;
         } else {
             i = 0;

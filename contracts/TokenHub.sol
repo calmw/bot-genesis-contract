@@ -8,13 +8,7 @@ import "./interface/0.6.x/ISystemReward.sol";
 import "./lib/0.6.x/SafeMath.sol";
 import "./System.sol";
 
-contract TokenHub is
-    ITokenHub,
-    System,
-    IParamSubscriber,
-    IApplication,
-    ISystemReward
-{
+contract TokenHub is ITokenHub, System, IParamSubscriber, IApplication, ISystemReward {
     using SafeMath for uint256;
 
     // BEP-171: Security Enhancement for Cross-Chain Module
@@ -42,64 +36,28 @@ contract TokenHub is
 
     // BEP-171: Security Enhancement for Cross-Chain Module
     // the lock period for large cross-chain transfer
-    uint256 public lockPeriod; // @dev deprecated
+    uint256 public lockPeriod;  // @dev deprecated
     // the lock Period for token recover
     uint256 public constant LOCK_PERIOD_FOR_TOKEN_RECOVER = 7 days;
     // token address => largeTransferLimit amount, address(0) means BNB
-    mapping(address => uint256) public largeTransferLimitMap; // @dev deprecated
+    mapping(address => uint256) public largeTransferLimitMap;  // @dev deprecated
     // token address => recipient address => lockedAmount + unlockAt, address(0) means BNB
     mapping(address => mapping(address => LockInfo)) public lockInfoMap;
     uint8 internal reentryLock;
 
     event rewardTo(address to, uint256 amount);
     event receiveDeposit(address from, uint256 amount);
-    event WithdrawUnlockedToken(
-        address indexed tokenAddr,
-        address indexed recipient,
-        uint256 amount
-    );
+    event WithdrawUnlockedToken(address indexed tokenAddr, address indexed recipient, uint256 amount);
 
-    event transferInSuccess(
-        address bep20Addr,
-        address refundAddr,
-        uint256 amount
-    ); // @dev deprecated
-    event transferOutSuccess(
-        address bep20Addr,
-        address senderAddr,
-        uint256 amount,
-        uint256 relayFee
-    ); // @dev deprecated
-    event refundSuccess(
-        address bep20Addr,
-        address refundAddr,
-        uint256 amount,
-        uint32 status
-    ); // @dev deprecated
-    event refundFailure(
-        address bep20Addr,
-        address refundAddr,
-        uint256 amount,
-        uint32 status
-    ); // @dev deprecated
-    event unexpectedPackage(uint8 channelId, bytes msgBytes); // @dev deprecated
-    event paramChange(string key, bytes value); // @dev deprecated
-    event LargeTransferLocked(
-        address indexed tokenAddr,
-        address indexed recipient,
-        uint256 amount,
-        uint256 unlockAt
-    ); // @dev deprecated
-    event CancelTransfer(
-        address indexed tokenAddr,
-        address indexed attacker,
-        uint256 amount
-    ); // @dev deprecated
-    event LargeTransferLimitSet(
-        address indexed tokenAddr,
-        address indexed owner,
-        uint256 largeTransferLimit
-    ); // @dev deprecated
+    event transferInSuccess(address bep20Addr, address refundAddr, uint256 amount);  // @dev deprecated
+    event transferOutSuccess(address bep20Addr, address senderAddr, uint256 amount, uint256 relayFee);  // @dev deprecated
+    event refundSuccess(address bep20Addr, address refundAddr, uint256 amount, uint32 status);  // @dev deprecated
+    event refundFailure(address bep20Addr, address refundAddr, uint256 amount, uint32 status);  // @dev deprecated
+    event unexpectedPackage(uint8 channelId, bytes msgBytes);  // @dev deprecated
+    event paramChange(string key, bytes value);  // @dev deprecated
+    event LargeTransferLocked(address indexed tokenAddr, address indexed recipient, uint256 amount, uint256 unlockAt);  // @dev deprecated
+    event CancelTransfer(address indexed tokenAddr, address indexed attacker, uint256 amount);  // @dev deprecated
+    event LargeTransferLimitSet(address indexed tokenAddr, address indexed owner, uint256 largeTransferLimit);  // @dev deprecated
 
     // BEP-299: Token Migration after BC Fusion
     event TokenRecoverLocked(
@@ -110,23 +68,13 @@ contract TokenHub is
         uint256 unlockAt
     );
     event CancelTokenRecoverLock(
-        bytes32 indexed tokenSymbol,
-        address indexed tokenAddr,
-        address indexed attacker,
-        uint256 amount
+        bytes32 indexed tokenSymbol, address indexed tokenAddr, address indexed attacker, uint256 amount
     );
-    event NotBoundToken(
-        bytes32 indexed tokenSymbol,
-        address indexed recipient,
-        uint256 amount
-    );
+    event NotBoundToken(bytes32 indexed tokenSymbol, address indexed recipient, uint256 amount);
 
     // BEP-171: Security Enhancement for Cross-Chain Module
     modifier onlyTokenOwner(address bep20Token) {
-        require(
-            msg.sender == IBEP20(bep20Token).getOwner(),
-            "not owner of BEP20 token"
-        );
+        require(msg.sender == IBEP20(bep20Token).getOwner(), "not owner of BEP20 token");
         _;
     }
 
@@ -162,9 +110,7 @@ contract TokenHub is
         revert("deprecated");
     }
 
-    function claimMigrationFund(
-        uint256 amount
-    ) external onlyStakeHub returns (bool) {
+    function claimMigrationFund(uint256 amount) external onlyStakeHub returns (bool) {
         revert("deprecated");
     }
 
@@ -221,30 +167,19 @@ contract TokenHub is
     }
 
     // BEP-171: Security Enhancement for Cross-Chain Module
-    function withdrawUnlockedToken(
-        address tokenAddress,
-        address recipient
-    ) external noReentrant {
+    function withdrawUnlockedToken(address tokenAddress, address recipient) external noReentrant {
         LockInfo storage lockInfo = lockInfoMap[tokenAddress][recipient];
         require(lockInfo.amount > 0, "no locked amount");
-        require(
-            block.timestamp >= lockInfo.unlockAt,
-            "still on locking period"
-        );
+        require(block.timestamp >= lockInfo.unlockAt, "still on locking period");
 
         uint256 _amount = lockInfo.amount;
         lockInfo.amount = 0;
 
         bool _success;
         if (tokenAddress == address(0x0)) {
-            (_success, ) = recipient.call{
-                gas: MAX_GAS_FOR_TRANSFER_BNB,
-                value: _amount
-            }("");
+            (_success,) = recipient.call{ gas: MAX_GAS_FOR_TRANSFER_BNB, value: _amount }("");
         } else {
-            _success = IBEP20(tokenAddress).transfer{
-                gas: MAX_GAS_FOR_CALLING_BEP20
-            }(recipient, _amount);
+            _success = IBEP20(tokenAddress).transfer{ gas: MAX_GAS_FOR_CALLING_BEP20 }(recipient, _amount);
         }
         require(_success, "withdraw unlocked token failed");
 
@@ -252,10 +187,7 @@ contract TokenHub is
     }
 
     // BEP-171: Security Enhancement for Cross-Chain Module
-    function cancelTransferIn(
-        address tokenAddress,
-        address attacker
-    ) external override onlyCrossChainContract {
+    function cancelTransferIn(address tokenAddress, address attacker) external override onlyCrossChainContract {
         revert("deprecated");
     }
 
@@ -271,10 +203,7 @@ contract TokenHub is
         address recipient,
         uint256 amount
     ) external override onlyInit onlyTokenRecoverPortal {
-        require(
-            amount <= MAX_BEP2_TOTAL_SUPPLY,
-            "amount is too large, exceed maximum bep2 token amount"
-        );
+        require(amount <= MAX_BEP2_TOTAL_SUPPLY, "amount is too large, exceed maximum bep2 token amount");
         uint256 convertedAmount;
         if (tokenSymbol != BEP2_TOKEN_SYMBOL_FOR_BNB) {
             address contractAddr = bep2SymbolToContractAddr[tokenSymbol];
@@ -287,57 +216,26 @@ contract TokenHub is
 
             uint256 bep20TokenDecimals = bep20ContractDecimals[contractAddr];
             convertedAmount = convertFromBep2Amount(amount, bep20TokenDecimals); // convert to bep20 amount
-            require(
-                IBEP20(contractAddr).balanceOf(address(this)) >=
-                    convertedAmount,
-                "insufficient balance"
-            );
-            _lockRecoverToken(
-                tokenSymbol,
-                contractAddr,
-                convertedAmount,
-                recipient
-            );
+            require(IBEP20(contractAddr).balanceOf(address(this)) >= convertedAmount, "insufficient balance");
+            _lockRecoverToken(tokenSymbol, contractAddr, convertedAmount, recipient);
         } else {
             convertedAmount = amount.mul(TEN_DECIMALS); // native bnb decimals is 8 on BC, while the native bnb decimals on BSC is 18
-            require(
-                address(this).balance >= convertedAmount,
-                "insufficient balance"
-            );
+            require(address(this).balance >= convertedAmount, "insufficient balance");
             address contractAddr = address(0x00);
-            _lockRecoverToken(
-                tokenSymbol,
-                contractAddr,
-                convertedAmount,
-                recipient
-            );
+            _lockRecoverToken(tokenSymbol, contractAddr, convertedAmount, recipient);
         }
     }
 
     // lock the token for 7 days to the recipient address
-    function _lockRecoverToken(
-        bytes32 tokenSymbol,
-        address contractAddr,
-        uint256 amount,
-        address recipient
-    ) internal {
+    function _lockRecoverToken(bytes32 tokenSymbol, address contractAddr, uint256 amount, address recipient) internal {
         LockInfo storage lockInfo = lockInfoMap[contractAddr][recipient];
         lockInfo.amount = lockInfo.amount.add(amount);
         lockInfo.unlockAt = block.timestamp + LOCK_PERIOD_FOR_TOKEN_RECOVER;
 
-        emit TokenRecoverLocked(
-            tokenSymbol,
-            contractAddr,
-            recipient,
-            amount,
-            lockInfo.unlockAt
-        );
+        emit TokenRecoverLocked(tokenSymbol, contractAddr, recipient, amount, lockInfo.unlockAt);
     }
 
-    function cancelTokenRecoverLock(
-        bytes32 tokenSymbol,
-        address attacker
-    ) external override onlyTokenRecoverPortal {
+    function cancelTokenRecoverLock(bytes32 tokenSymbol, address attacker) external override onlyTokenRecoverPortal {
         address tokenAddress = address(0x00);
         if (tokenSymbol != BEP2_TOKEN_SYMBOL_FOR_BNB) {
             tokenAddress = bep2SymbolToContractAddr[tokenSymbol];
@@ -349,12 +247,7 @@ contract TokenHub is
         uint256 _amount = lockInfo.amount;
         lockInfo.amount = 0;
 
-        emit CancelTokenRecoverLock(
-            tokenSymbol,
-            tokenAddress,
-            attacker,
-            _amount
-        );
+        emit CancelTokenRecoverLock(tokenSymbol, tokenAddress, attacker, _amount);
     }
 
     /**
@@ -392,53 +285,34 @@ contract TokenHub is
         revert("deprecated");
     }
 
-    function updateParam(
-        string calldata key,
-        bytes calldata value
-    ) external override onlyGov {
+    function updateParam(string calldata key, bytes calldata value) external override onlyGov {
         revert("deprecated");
     }
 
-    function getContractAddrByBEP2Symbol(
-        bytes32 bep2Symbol
-    ) external view override returns (address) {
+    function getContractAddrByBEP2Symbol(bytes32 bep2Symbol) external view override returns (address) {
         return bep2SymbolToContractAddr[bep2Symbol];
     }
 
-    function getBep2SymbolByContractAddr(
-        address contractAddr
-    ) external view override returns (bytes32) {
+    function getBep2SymbolByContractAddr(address contractAddr) external view override returns (bytes32) {
         return contractAddrToBEP2Symbol[contractAddr];
     }
 
-    function bindToken(
-        bytes32 bep2Symbol,
-        address contractAddr,
-        uint256 decimals
-    ) external override onlyTokenManager {
+    function bindToken(bytes32 bep2Symbol, address contractAddr, uint256 decimals) external override onlyTokenManager {
         revert("deprecated");
     }
 
-    function unbindToken(
-        bytes32 bep2Symbol,
-        address contractAddr
-    ) external override onlyTokenManager {
+    function unbindToken(bytes32 bep2Symbol, address contractAddr) external override onlyTokenManager {
         revert("deprecated");
     }
 
-    function convertFromBep2Amount(
-        uint256 amount,
-        uint256 bep20TokenDecimals
-    ) internal pure returns (uint256) {
+    function convertFromBep2Amount(uint256 amount, uint256 bep20TokenDecimals) internal pure returns (uint256) {
         if (bep20TokenDecimals > BEP2_TOKEN_DECIMALS) {
             return amount.mul(10 ** (bep20TokenDecimals - BEP2_TOKEN_DECIMALS));
         }
         return amount.div(10 ** (BEP2_TOKEN_DECIMALS - bep20TokenDecimals));
     }
 
-    function getBoundContract(
-        string memory bep2Symbol
-    ) public view returns (address) {
+    function getBoundContract(string memory bep2Symbol) public view returns (address) {
         bytes32 bep2TokenSymbol;
         assembly {
             bep2TokenSymbol := mload(add(bep2Symbol, 32))
@@ -446,9 +320,7 @@ contract TokenHub is
         return bep2SymbolToContractAddr[bep2TokenSymbol];
     }
 
-    function getBoundBep2Symbol(
-        address contractAddr
-    ) public view returns (string memory) {
+    function getBoundBep2Symbol(address contractAddr) public view returns (string memory) {
         bytes32 bep2SymbolBytes32 = contractAddrToBEP2Symbol[contractAddr];
         bytes memory bep2SymbolBytes = new bytes(32);
         assembly {
@@ -469,9 +341,7 @@ contract TokenHub is
         return string(bep2Symbol);
     }
 
-    function withdrawStakingBNB(
-        uint256 amount
-    ) external override returns (bool) {
+    function withdrawStakingBNB(uint256 amount) external override returns (bool) {
         revert("deprecated");
     }
 }

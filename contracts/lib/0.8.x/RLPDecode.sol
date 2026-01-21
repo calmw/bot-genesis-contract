@@ -41,9 +41,7 @@ library RLPDecode {
         return self.nextPtr < item.memPtr + item.len;
     }
 
-    function toRLPItem(
-        bytes memory self
-    ) internal pure returns (RLPItem memory) {
+    function toRLPItem(bytes memory self) internal pure returns (RLPItem memory) {
         uint256 memPtr;
         assembly {
             memPtr := add(self, 0x20)
@@ -52,9 +50,7 @@ library RLPDecode {
         return RLPItem(self.length, memPtr);
     }
 
-    function iterator(
-        RLPItem memory self
-    ) internal pure returns (Iterator memory) {
+    function iterator(RLPItem memory self) internal pure returns (Iterator memory) {
         require(isList(self));
 
         uint256 ptr = self.memPtr + _payloadOffset(self.memPtr);
@@ -69,9 +65,7 @@ library RLPDecode {
         return item.len - _payloadOffset(item.memPtr);
     }
 
-    function toList(
-        RLPItem memory item
-    ) internal pure returns (RLPItem[] memory) {
+    function toList(RLPItem memory item) internal pure returns (RLPItem[] memory) {
         require(isList(item));
 
         uint256 items = numItems(item);
@@ -103,9 +97,7 @@ library RLPDecode {
         return true;
     }
 
-    function toRlpBytes(
-        RLPItem memory item
-    ) internal pure returns (bytes memory) {
+    function toRlpBytes(RLPItem memory item) internal pure returns (bytes memory) {
         bytes memory result = new bytes(item.len);
         if (result.length == 0) return result;
 
@@ -153,9 +145,7 @@ library RLPDecode {
             result := mload(memPtr)
 
             // shift to the correct location if necessary
-            if lt(len, 32) {
-                result := div(result, exp(256, sub(32, len)))
-            }
+            if lt(len, 32) { result := div(result, exp(256, sub(32, len))) }
         }
 
         return result;
@@ -253,10 +243,7 @@ library RLPDecode {
 
         if (byte0 < STRING_SHORT_START) {
             return 0;
-        } else if (
-            byte0 < STRING_LONG_START ||
-            (byte0 >= LIST_SHORT_START && byte0 < LIST_LONG_START)
-        ) {
+        } else if (byte0 < STRING_LONG_START || (byte0 >= LIST_SHORT_START && byte0 < LIST_LONG_START)) {
             return 1;
         } else if (
             byte0 < LIST_SHORT_START // being explicit
@@ -268,10 +255,10 @@ library RLPDecode {
     }
 
     /*
-     * @param src Pointer to source
-     * @param dest Pointer to destination
-     * @param len Amount of memory to copy from the source
-     */
+    * @param src Pointer to source
+    * @param dest Pointer to destination
+    * @param len Amount of memory to copy from the source
+    */
     function copy(uint256 src, uint256 dest, uint256 len) private pure {
         if (len == 0) return;
 

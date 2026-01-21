@@ -13,24 +13,19 @@ import "./interface/0.6.x/IStakeHub.sol";
 import "./lib/0.6.x/SafeMath.sol";
 import "./lib/0.6.x/RLPDecode.sol";
 
-contract BSCValidatorSet is
-    IBSCValidatorSet,
-    System,
-    IParamSubscriber,
-    IApplication
-{
+contract BSCValidatorSet is IBSCValidatorSet, System, IParamSubscriber, IApplication {
     using SafeMath for uint256;
 
     using RLPDecode for *;
 
     bytes public constant INIT_VALIDATORSET_BYTES =
-        hex"f905ec80f905e8f846942a7cdd959bfe8d9487b2a43b33565295a698f7e294b6a7edd747c0554875d3fc531d19ba1497992c5e941ff80f3f7f110ffd8920a3ac38fdef318fe94a3f86048c27395000f846946488aa4d1955ee33403f8ccb1d4de5fb97c7ade294220f003d8bdfaadf52aa1e55ae4cc485e6794875941a87e90e440a39c99aa9cb5cea0ad6a3f0b2407b86048c27395000f846949ef9f4360c606c7ab4db26b016007d3ad0ab86a0946103af86a874b705854033438383c82575f25bc29418e2db06cbff3e3c5f856410a1838649e760175786048c27395000f84694ee01c3b1283aa067c58eab4709f85e99d46de5fe94ee4b9bfb1871c64e2bcabb1dc382dc8b7c4218a29415904ab26ab0e99d70b51c220ccdcccabee6e29786048c27395000f84694685b1ded8013785d6623cc18d214320b6bb6475994a20ef4e5e4e7e36258dbf51f4d905114cb1b34bc9413e39085dc88704f4394d35209a02b1a9520320c86048c27395000f8469478f3adfc719c99674c072166708589033e2d9afe9448a30d5eaa7b64492a160f139e2da2800ec3834e94055838358c29edf4dcc1ba1985ad58aedbb6be2b86048c27395000f84694c2be4ec20253b8642161bc3f444f53679c1f3d479466f50c616d737e60d7ca6311ff0d9c434197898a94d1d678a2506eeaa365056fe565df8bc8659f28b086048c27395000f846942f7be8361c80a4c1e7e9aaf001d0877f1cfde218945f93992ac37f3e61db2ef8a587a436a161fd210b94ecbc4fb1a97861344dad0867ca3cba2b860411f086048c27395000f84694ce2fd7544e0b2cc94692d4a704debef7bcb613289444abc67b4b2fba283c582387f54c9cba7c34bafa948acc2ab395ded08bb75ce85bf0f95ad2abc51ad586048c27395000f84694b8f7166496996a7da21cf1f1b04d9b3e26a3d077946770572763289aac606e4f327c2f6cc1aa3b3e3b94882d745ed97d4422ca8da1c22ec49d880c4c097286048c27395000f846942d4c407bbe49438ed859fe965b140dcf1aab71a9943ad0939e120f33518fbba04631afe7a3ed6327b194b2bbb170ca4e499a2b0f3cc85ebfa6e8c4dfcbea86048c27395000f846946bbad7cf34b5fa511d8e963dbba288b1960e75d694853b0f6c324d1f4e76c8266942337ac1b0af1a229442498946a51ca5924552ead6fc2af08b94fcba648601d1a94a2000f846944430b3230294d12c6ab2aac5c2cd68e80b16b581947b107f4976a252a6939b771202c28e64e03f52d694795811a7f214084116949fc4f53cedbf189eeab28601d1a94a2000f84694ea0a6e3c511bbd10f4519ece37dc24887e11b55d946811ca77acfb221a49393c193f3a22db829fcc8e9464feb7c04830dd9ace164fc5c52b3f5a29e5018a8601d1a94a2000f846947ae2f5b9e386cd1b50a4550696d957cb4900f03a94e83bcc5077e6b873995c24bac871b5ad856047e19464e48d4057a90b233e026c1041e6012ada897fe88601d1a94a2000f8469482012708dafc9e1b880fd083b32182b869be8e09948e5adc73a2d233a1b496ed3115464dd6c7b887509428b383d324bc9a37f4e276190796ba5a8947f5ed8601d1a94a2000f8469422b81f8e175ffde54d797fe11eb03f9e3bf75f1d94a1c3ef7ca38d8ba80cce3bfc53ebd2903ed21658942767f7447f7b9b70313d4147b795414aecea54718601d1a94a2000f8469468bf0b8b6fb4e317a0f9d6f03eaf8ce6675bc60d94675cfe570b7902623f47e7f59c9664b5f5065dcf94d84f0d2e50bcf00f2fc476e1c57f5ca2d57f625b8601d1a94a2000f846948c4d90829ce8f72d0163c1d5cf348a862d5506309485c42a7b34309bee2ed6a235f86d16f059deec5894cc2cedc53f0fa6d376336efb67e43d167169f3b78601d1a94a2000f8469435e7a025f4da968de7e4d7e4004197917f4070f194b1182abaeeb3b4d8eba7e6a4162eac7ace23d57394c4fd0d870da52e73de2dd8ded19fe3d26f43a1138601d1a94a2000f84694d6caa02bbebaebb5d7e581e4b66559e635f805ff94c07335cf083c1c46a487f0325769d88e163b653694efaff03b42e41f953a925fc43720e45fb61a19938601d1a94a2000";
+    hex"f905ec80f905e8f846942a7cdd959bfe8d9487b2a43b33565295a698f7e294b6a7edd747c0554875d3fc531d19ba1497992c5e941ff80f3f7f110ffd8920a3ac38fdef318fe94a3f86048c27395000f846946488aa4d1955ee33403f8ccb1d4de5fb97c7ade294220f003d8bdfaadf52aa1e55ae4cc485e6794875941a87e90e440a39c99aa9cb5cea0ad6a3f0b2407b86048c27395000f846949ef9f4360c606c7ab4db26b016007d3ad0ab86a0946103af86a874b705854033438383c82575f25bc29418e2db06cbff3e3c5f856410a1838649e760175786048c27395000f84694ee01c3b1283aa067c58eab4709f85e99d46de5fe94ee4b9bfb1871c64e2bcabb1dc382dc8b7c4218a29415904ab26ab0e99d70b51c220ccdcccabee6e29786048c27395000f84694685b1ded8013785d6623cc18d214320b6bb6475994a20ef4e5e4e7e36258dbf51f4d905114cb1b34bc9413e39085dc88704f4394d35209a02b1a9520320c86048c27395000f8469478f3adfc719c99674c072166708589033e2d9afe9448a30d5eaa7b64492a160f139e2da2800ec3834e94055838358c29edf4dcc1ba1985ad58aedbb6be2b86048c27395000f84694c2be4ec20253b8642161bc3f444f53679c1f3d479466f50c616d737e60d7ca6311ff0d9c434197898a94d1d678a2506eeaa365056fe565df8bc8659f28b086048c27395000f846942f7be8361c80a4c1e7e9aaf001d0877f1cfde218945f93992ac37f3e61db2ef8a587a436a161fd210b94ecbc4fb1a97861344dad0867ca3cba2b860411f086048c27395000f84694ce2fd7544e0b2cc94692d4a704debef7bcb613289444abc67b4b2fba283c582387f54c9cba7c34bafa948acc2ab395ded08bb75ce85bf0f95ad2abc51ad586048c27395000f84694b8f7166496996a7da21cf1f1b04d9b3e26a3d077946770572763289aac606e4f327c2f6cc1aa3b3e3b94882d745ed97d4422ca8da1c22ec49d880c4c097286048c27395000f846942d4c407bbe49438ed859fe965b140dcf1aab71a9943ad0939e120f33518fbba04631afe7a3ed6327b194b2bbb170ca4e499a2b0f3cc85ebfa6e8c4dfcbea86048c27395000f846946bbad7cf34b5fa511d8e963dbba288b1960e75d694853b0f6c324d1f4e76c8266942337ac1b0af1a229442498946a51ca5924552ead6fc2af08b94fcba648601d1a94a2000f846944430b3230294d12c6ab2aac5c2cd68e80b16b581947b107f4976a252a6939b771202c28e64e03f52d694795811a7f214084116949fc4f53cedbf189eeab28601d1a94a2000f84694ea0a6e3c511bbd10f4519ece37dc24887e11b55d946811ca77acfb221a49393c193f3a22db829fcc8e9464feb7c04830dd9ace164fc5c52b3f5a29e5018a8601d1a94a2000f846947ae2f5b9e386cd1b50a4550696d957cb4900f03a94e83bcc5077e6b873995c24bac871b5ad856047e19464e48d4057a90b233e026c1041e6012ada897fe88601d1a94a2000f8469482012708dafc9e1b880fd083b32182b869be8e09948e5adc73a2d233a1b496ed3115464dd6c7b887509428b383d324bc9a37f4e276190796ba5a8947f5ed8601d1a94a2000f8469422b81f8e175ffde54d797fe11eb03f9e3bf75f1d94a1c3ef7ca38d8ba80cce3bfc53ebd2903ed21658942767f7447f7b9b70313d4147b795414aecea54718601d1a94a2000f8469468bf0b8b6fb4e317a0f9d6f03eaf8ce6675bc60d94675cfe570b7902623f47e7f59c9664b5f5065dcf94d84f0d2e50bcf00f2fc476e1c57f5ca2d57f625b8601d1a94a2000f846948c4d90829ce8f72d0163c1d5cf348a862d5506309485c42a7b34309bee2ed6a235f86d16f059deec5894cc2cedc53f0fa6d376336efb67e43d167169f3b78601d1a94a2000f8469435e7a025f4da968de7e4d7e4004197917f4070f194b1182abaeeb3b4d8eba7e6a4162eac7ace23d57394c4fd0d870da52e73de2dd8ded19fe3d26f43a1138601d1a94a2000f84694d6caa02bbebaebb5d7e581e4b66559e635f805ff94c07335cf083c1c46a487f0325769d88e163b653694efaff03b42e41f953a925fc43720e45fb61a19938601d1a94a2000";
 
     uint256 public constant INIT_NUM_OF_CABINETS = 21;
 
     /*----------------- state of the contract -----------------*/
     Validator[] public currentValidatorSet;
-    uint256 public expireTimeSecondGap; // @dev deprecated
+    uint256 public expireTimeSecondGap;  // @dev deprecated
     uint256 public totalInComing;
 
     // key is the `consensusAddress` of `Validator`,
@@ -39,9 +34,8 @@ contract BSCValidatorSet is
     uint256 public numOfJailed; // @dev deprecated
 
     uint256 public constant BLOCK_FEES_RATIO_SCALE = 10000;
-    address public constant BURN_ADDRESS =
-        0x000000000000000000000000000000000000dEaD;
-    //    uint256 public constant INIT_BURN_RATIO = 1000;
+    address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
+//    uint256 public constant INIT_BURN_RATIO = 1000;
     uint256 public constant INIT_BURN_RATIO = 0;
     uint256 public burnRatio;
     bool public burnRatioInitialized; // @dev deprecated
@@ -82,18 +76,17 @@ contract BSCValidatorSet is
     uint256 public systemRewardAntiMEVRatio;
 
     // Gas Treasury
-    //    uint256 public gasTreasuryRatio = 500;   // e.g. 500 = 5%
+//    uint256 public gasTreasuryRatio = 500;   // e.g. 500 = 5%
     uint256 public gasTreasuryMaxRatio = 10000; // e.g. 5000 = 50%
-    //    address public gasTreasuryAddr = address();
+//    address public gasTreasuryAddr = address();
     // 不要改，节点代码会强依赖
-    //    bytes32 internal constant GAS_TREASURY_ADDR_SLOT =
-    //    bytes32(uint256(keccak256("chain.sys.gasTreasury.addr")) - 1);
-    //    bytes32 internal constant GAS_TREASURY_RATIO_SLOT =
-    //    bytes32(uint256(keccak256("chain.sys.gasTreasury.ratio")) - 1);
-    bytes32 internal constant GAS_TREASURY_ADDR_SLOT =
-        0x8c5e6139f140dba30faf3c7b5e1def2236d095043e5819a2dec914ccde5dd852;
-    bytes32 internal constant GAS_TREASURY_RATIO_SLOT =
-        0x8f2e07f082a358a141b3fa58588757c64dde9d4b011844f1277c8e741b96f0d9;
+//    bytes32 internal constant GAS_TREASURY_ADDR_SLOT =
+//    bytes32(uint256(keccak256("chain.sys.gasTreasury.addr")) - 1);
+//    bytes32 internal constant GAS_TREASURY_RATIO_SLOT =
+//    bytes32(uint256(keccak256("chain.sys.gasTreasury.ratio")) - 1);
+    bytes32 internal constant GAS_TREASURY_ADDR_SLOT = 0x8c5e6139f140dba30faf3c7b5e1def2236d095043e5819a2dec914ccde5dd852 ;
+    bytes32 internal constant GAS_TREASURY_RATIO_SLOT = 0x8f2e07f082a358a141b3fa58588757c64dde9d4b011844f1277c8e741b96f0d9 ;
+
 
     struct Validator {
         address consensusAddress;
@@ -141,10 +134,7 @@ contract BSCValidatorSet is
     }
 
     modifier oncePerBlock() {
-        require(
-            block.number > previousHeight,
-            "can not do this twice in one block"
-        );
+        require(block.number > previousHeight, "can not do this twice in one block");
         _;
         previousHeight = block.number;
     }
@@ -161,37 +151,30 @@ contract BSCValidatorSet is
     event validatorEnterMaintenance(address indexed validator);
     event validatorExitMaintenance(address indexed validator);
     event finalityRewardDeposit(address indexed validator, uint256 amount);
-    event deprecatedFinalityRewardDeposit(
-        address indexed validator,
-        uint256 amount
-    );
+    event deprecatedFinalityRewardDeposit(address indexed validator, uint256 amount);
 
-    event validatorJailed(address indexed validator); // @dev deprecated
-    event validatorEmptyJailed(address indexed validator); // @dev deprecated
-    event batchTransfer(uint256 amount); // @dev deprecated
-    event batchTransferFailed(uint256 indexed amount, string reason); // @dev deprecated
-    event batchTransferLowerFailed(uint256 indexed amount, bytes reason); // @dev deprecated
-    event directTransfer(address payable indexed validator, uint256 amount); // @dev deprecated
-    event directTransferFail(address payable indexed validator, uint256 amount); // @dev deprecated
-    event failReasonWithStr(string message); // @dev deprecated
-    event unexpectedPackage(uint8 channelId, bytes msgBytes); // @dev deprecated
-    event tmpValidatorSetUpdated(uint256 validatorsNum); // @dev deprecated
+    event validatorJailed(address indexed validator);  // @dev deprecated
+    event validatorEmptyJailed(address indexed validator);  // @dev deprecated
+    event batchTransfer(uint256 amount);  // @dev deprecated
+    event batchTransferFailed(uint256 indexed amount, string reason);  // @dev deprecated
+    event batchTransferLowerFailed(uint256 indexed amount, bytes reason);  // @dev deprecated
+    event directTransfer(address payable indexed validator, uint256 amount);  // @dev deprecated
+    event directTransferFail(address payable indexed validator, uint256 amount);  // @dev deprecated
+    event failReasonWithStr(string message);  // @dev deprecated
+    event unexpectedPackage(uint8 channelId, bytes msgBytes);  // @dev deprecated
+    event tmpValidatorSetUpdated(uint256 validatorsNum);  // @dev deprecated
     // Gas Treasury
     event GasTreasuryRatioUpdated(uint256 oldRatio, uint256 newRatio);
     event GasTreasuryAddrUpdated(address oldAddr, address newAddr);
 
     /*----------------- init -----------------*/
     function init() external onlyNotInit {
-        (
-            ValidatorSetPackage memory validatorSetPkg,
-            bool valid
-        ) = decodeValidatorSet(INIT_VALIDATORSET_BYTES);
+        (ValidatorSetPackage memory validatorSetPkg, bool valid) =
+                        decodeValidatorSet(INIT_VALIDATORSET_BYTES);
         require(valid, "failed to parse init validatorSet");
         for (uint256 i; i < validatorSetPkg.validatorSet.length; ++i) {
             currentValidatorSet.push(validatorSetPkg.validatorSet[i]);
-            currentValidatorSetMap[
-                validatorSetPkg.validatorSet[i].consensusAddress
-            ] = i + 1;
+            currentValidatorSetMap[validatorSetPkg.validatorSet[i].consensusAddress] = i + 1;
         }
         alreadyInit = true;
     }
@@ -202,28 +185,15 @@ contract BSCValidatorSet is
     function handleSynPackage(
         uint8,
         bytes calldata msgBytes
-    )
-        external
-        override
-        onlyInit
-        onlyCrossChainContract
-        initValidatorExtraSet
-        returns (bytes memory responsePayload)
-    {
+    ) external override onlyInit onlyCrossChainContract initValidatorExtraSet returns (bytes memory responsePayload) {
         revert("deprecated");
     }
 
-    function handleAckPackage(
-        uint8 channelId,
-        bytes calldata msgBytes
-    ) external override onlyCrossChainContract {
+    function handleAckPackage(uint8 channelId, bytes calldata msgBytes) external override onlyCrossChainContract {
         revert("deprecated");
     }
 
-    function handleFailAckPackage(
-        uint8 channelId,
-        bytes calldata msgBytes
-    ) external override onlyCrossChainContract {
+    function handleFailAckPackage(uint8 channelId, bytes calldata msgBytes) external override onlyCrossChainContract {
         revert("deprecated");
     }
 
@@ -253,28 +223,22 @@ contract BSCValidatorSet is
         // - 1. validators exit maintenance
         // - 2. clear all maintainInfo
         // - 3. get unjailed validators from validatorSet
-        (
-            Validator[] memory validatorSetTemp,
-            bytes[] memory voteAddrsTemp
-        ) = _forceMaintainingValidatorsExit(_validatorSet, _voteAddrs);
+        (Validator[] memory validatorSetTemp, bytes[] memory voteAddrsTemp) =
+                        _forceMaintainingValidatorsExit(_validatorSet, _voteAddrs);
 
         // step 1: distribute incoming
         for (uint256 i; i < currentValidatorSet.length; ++i) {
             uint256 incoming = currentValidatorSet[i].incoming;
             if (incoming != 0) {
                 currentValidatorSet[i].incoming = 0;
-                IStakeHub(STAKE_HUB_ADDR).distributeReward{value: incoming}(
-                    currentValidatorSet[i].consensusAddress
-                );
+                IStakeHub(STAKE_HUB_ADDR).distributeReward{value: incoming}(currentValidatorSet[i].consensusAddress);
             }
         }
 
         // step 2: do dusk transfer
         if (address(this).balance > 0) {
             emit systemTransfer(address(this).balance);
-            address(uint160(SYSTEM_REWARD_ADDR)).transfer(
-                address(this).balance
-            );
+            address(uint160(SYSTEM_REWARD_ADDR)).transfer(address(this).balance);
         }
 
         // step 3: do update validator set state
@@ -293,9 +257,7 @@ contract BSCValidatorSet is
      *
      * @param valAddr The validator address who produced the current block
      */
-    function deposit(
-        address valAddr
-    ) external payable onlyCoinbase onlyInit noEmptyDeposit onlyZeroGasPrice {
+    function deposit(address valAddr) external payable onlyCoinbase onlyInit noEmptyDeposit onlyZeroGasPrice {
         uint256 value = msg.value;
         uint256 index = currentValidatorSetMap[valAddr];
 
@@ -307,15 +269,11 @@ contract BSCValidatorSet is
 
         uint256 systemRewardRatio = systemRewardBaseRatio;
         if (turnLength > 1 && systemRewardAntiMEVRatio > 0) {
-            systemRewardRatio +=
-                (systemRewardAntiMEVRatio * (block.number % turnLength)) /
-                (turnLength - 1);
+            systemRewardRatio += systemRewardAntiMEVRatio * (block.number % turnLength) / (turnLength - 1);
         }
 
         if (value > 0 && systemRewardRatio > 0) {
-            uint256 toSystemReward = msg.value.mul(systemRewardRatio).div(
-                BLOCK_FEES_RATIO_SCALE
-            );
+            uint256 toSystemReward = msg.value.mul(systemRewardRatio).div(BLOCK_FEES_RATIO_SCALE);
             if (toSystemReward > 0) {
                 address(uint160(SYSTEM_REWARD_ADDR)).transfer(toSystemReward);
                 emit systemTransfer(toSystemReward);
@@ -325,9 +283,7 @@ contract BSCValidatorSet is
         }
 
         if (value > 0 && burnRatio > 0) {
-            uint256 toBurn = msg.value.mul(burnRatio).div(
-                BLOCK_FEES_RATIO_SCALE
-            );
+            uint256 toBurn = msg.value.mul(burnRatio).div(BLOCK_FEES_RATIO_SCALE);
             if (toBurn > 0) {
                 address(uint160(BURN_ADDRESS)).transfer(toBurn);
                 emit feeBurned(toBurn);
@@ -365,10 +321,7 @@ contract BSCValidatorSet is
             return;
         }
 
-        totalValue = ISystemReward(SYSTEM_REWARD_ADDR).claimRewards(
-            payable(address(this)),
-            totalValue
-        );
+        totalValue = ISystemReward(SYSTEM_REWARD_ADDR).claimRewards(payable(address(this)), totalValue);
         if (totalValue == 0) {
             return;
         }
@@ -409,12 +362,7 @@ contract BSCValidatorSet is
     /**
      * @notice Return the vote address and consensus address of the validators in `currentValidatorSet` that are not jailed
      */
-    function getLivingValidators()
-        external
-        view
-        override
-        returns (address[] memory, bytes[] memory)
-    {
+    function getLivingValidators() external view override returns (address[] memory, bytes[] memory) {
         uint256 n = currentValidatorSet.length;
         uint256 living;
         for (uint256 i; i < n; ++i) {
@@ -428,8 +376,7 @@ contract BSCValidatorSet is
         if (validatorExtraSet.length == n) {
             for (uint256 i; i < n; ++i) {
                 if (!currentValidatorSet[i].jailed) {
-                    consensusAddrs[living] = currentValidatorSet[i]
-                        .consensusAddress;
+                    consensusAddrs[living] = currentValidatorSet[i].consensusAddress;
                     voteAddrs[living] = validatorExtraSet[i].voteAddress;
                     living++;
                 }
@@ -437,8 +384,7 @@ contract BSCValidatorSet is
         } else {
             for (uint256 i; i < n; ++i) {
                 if (!currentValidatorSet[i].jailed) {
-                    consensusAddrs[living] = currentValidatorSet[i]
-                        .consensusAddress;
+                    consensusAddrs[living] = currentValidatorSet[i].consensusAddress;
                     living++;
                 }
             }
@@ -452,16 +398,9 @@ contract BSCValidatorSet is
      * Mining validators are block producers in the current epoch
      * including most of the cabinets and a few of the candidates
      */
-    function getMiningValidators()
-        external
-        view
-        override
-        returns (address[] memory, bytes[] memory)
-    {
+    function getMiningValidators() external view override returns (address[] memory, bytes[] memory) {
         uint256 _maxNumOfWorkingCandidates = maxNumOfWorkingCandidates;
-        uint256 _numOfCabinets = numOfCabinets > 0
-            ? numOfCabinets
-            : INIT_NUM_OF_CABINETS;
+        uint256 _numOfCabinets = numOfCabinets > 0 ? numOfCabinets : INIT_NUM_OF_CABINETS;
         uint256 _shuffleInterval = 200;
 
         address[] memory validators = getValidators();
@@ -551,18 +490,14 @@ contract BSCValidatorSet is
             return !currentValidatorSet[index].jailed;
         }
 
-        return
-            !currentValidatorSet[index].jailed &&
-            !validatorExtraSet[index].isMaintaining;
+        return !currentValidatorSet[index].jailed && !validatorExtraSet[index].isMaintaining;
     }
 
     /**
      * @notice Return whether the validator is a working validator(not jailed or maintaining) by consensus address
      * Will return false if the validator is not in `currentValidatorSet`
      */
-    function isCurrentValidator(
-        address validator
-    ) external view override returns (bool) {
+    function isCurrentValidator(address validator) external view override returns (bool) {
         uint256 index = currentValidatorSetMap[validator];
         if (index <= 0) {
             return false;
@@ -576,9 +511,7 @@ contract BSCValidatorSet is
     /**
      * @notice Return the index of the validator in `currentValidatorSet`(from 0 to `currentValidatorSet.length-1`)
      */
-    function getCurrentValidatorIndex(
-        address validator
-    ) public view returns (uint256) {
+    function getCurrentValidatorIndex(address validator) public view returns (uint256) {
         uint256 index = currentValidatorSetMap[validator];
         require(index > 0, "only current validators");
 
@@ -590,15 +523,9 @@ contract BSCValidatorSet is
      * @notice Return the number of mining validators.
      * The function name is misleading, it should be `getMiningValidatorCount`. But it's kept for compatibility.
      */
-    function getWorkingValidatorCount()
-        public
-        view
-        returns (uint256 workingValidatorCount)
-    {
+    function getWorkingValidatorCount() public view returns (uint256 workingValidatorCount) {
         workingValidatorCount = getValidators().length;
-        uint256 _numOfCabinets = numOfCabinets > 0
-            ? numOfCabinets
-            : INIT_NUM_OF_CABINETS;
+        uint256 _numOfCabinets = numOfCabinets > 0 ? numOfCabinets : INIT_NUM_OF_CABINETS;
         if (workingValidatorCount > _numOfCabinets) {
             workingValidatorCount = _numOfCabinets;
         }
@@ -608,9 +535,7 @@ contract BSCValidatorSet is
     }
 
     /*----------------- For slash -----------------*/
-    function misdemeanor(
-        address validator
-    ) external override onlySlash initValidatorExtraSet {
+    function misdemeanor(address validator) external override onlySlash initValidatorExtraSet {
         uint256 validatorIndex = _misdemeanor(validator);
         if (canEnterMaintenance(validatorIndex)) {
             _enterMaintenance(validator, validatorIndex);
@@ -618,10 +543,7 @@ contract BSCValidatorSet is
     }
 
     function felony(address validator) external override initValidatorExtraSet {
-        require(
-            msg.sender == SLASH_CONTRACT_ADDR || msg.sender == STAKE_HUB_ADDR,
-            "only slash or stakeHub contract"
-        );
+        require(msg.sender == SLASH_CONTRACT_ADDR || msg.sender == STAKE_HUB_ADDR, "only slash or stakeHub contract");
 
         uint256 index = currentValidatorSetMap[validator];
         if (index <= 0) {
@@ -636,9 +558,7 @@ contract BSCValidatorSet is
         }
     }
 
-    function removeTmpMigratedValidator(
-        address validator
-    ) external onlyStakeHub {
+    function removeTmpMigratedValidator(address validator) external onlyStakeHub {
         revert("deprecated");
     }
 
@@ -652,13 +572,13 @@ contract BSCValidatorSet is
         }
 
         if (
-            currentValidatorSet[index].consensusAddress == address(0) || // - 0. check if empty validator
-            (maxNumOfMaintaining == 0 || maintainSlashScale == 0) || // - 1. check if not start
-            numOfMaintaining >= maxNumOfMaintaining || // - 2. check if reached upper limit
-            !isWorkingValidator(index) || // - 3. check if not working(not jailed and not maintaining)
-            validatorExtraSet[index].enterMaintenanceHeight > 0 || // - 5. check if has Maintained during current 24-hour period
-            // current validators are selected every 24 hours(from 00:00:00 UTC to 23:59:59 UTC)
-            getValidators().length <= 1 // - 6. check num of remaining working validators
+            currentValidatorSet[index].consensusAddress == address(0) // - 0. check if empty validator
+            || (maxNumOfMaintaining == 0 || maintainSlashScale == 0) // - 1. check if not start
+            || numOfMaintaining >= maxNumOfMaintaining // - 2. check if reached upper limit
+            || !isWorkingValidator(index) // - 3. check if not working(not jailed and not maintaining)
+        || validatorExtraSet[index].enterMaintenanceHeight > 0 // - 5. check if has Maintained during current 24-hour period
+        // current validators are selected every 24 hours(from 00:00:00 UTC to 23:59:59 UTC)
+        || getValidators().length <= 1 // - 6. check num of remaining working validators
         ) {
             return false;
         }
@@ -679,10 +599,7 @@ contract BSCValidatorSet is
         }
 
         uint256 index = getCurrentValidatorIndex(msg.sender);
-        require(
-            canEnterMaintenance(index),
-            "can not enter Temporary Maintenance"
-        );
+        require(canEnterMaintenance(index), "can not enter Temporary Maintenance");
         _enterMaintenance(msg.sender, index);
     }
 
@@ -699,77 +616,44 @@ contract BSCValidatorSet is
     }
 
     /*----------------- Param update -----------------*/
-    //    function updateParam(string calldata key, bytes calldata value) external override onlyInit onlyGov {
-    function updateParam(
-        string calldata key,
-        bytes calldata value
-    ) external override {
-        // TODO 生产环境改掉!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//    function updateParam(string calldata key, bytes calldata value) external override onlyInit onlyGov {
+    function updateParam(string calldata key, bytes calldata value) external override { // TODO 生产环境改掉!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if (Memory.compareStrings(key, "burnRatio")) {
             require(value.length == 32, "length of burnRatio mismatch");
             uint256 newBurnRatio = BytesToTypes.bytesToUint256(32, value);
             require(
-                newBurnRatio.add(systemRewardBaseRatio).add(
-                    systemRewardAntiMEVRatio
-                ) <= BLOCK_FEES_RATIO_SCALE,
+                newBurnRatio.add(systemRewardBaseRatio).add(systemRewardAntiMEVRatio) <= BLOCK_FEES_RATIO_SCALE,
                 "the burnRatio plus systemRewardBaseRatio and systemRewardAntiMEVRatio must be no greater than 10000"
             );
             burnRatio = newBurnRatio;
         } else if (Memory.compareStrings(key, "maxNumOfMaintaining")) {
-            require(
-                value.length == 32,
-                "length of maxNumOfMaintaining mismatch"
-            );
-            uint256 newMaxNumOfMaintaining = BytesToTypes.bytesToUint256(
-                32,
-                value
-            );
+            require(value.length == 32, "length of maxNumOfMaintaining mismatch");
+            uint256 newMaxNumOfMaintaining = BytesToTypes.bytesToUint256(32, value);
             uint256 _numOfCabinets = numOfCabinets;
             if (_numOfCabinets == 0) {
                 _numOfCabinets = INIT_NUM_OF_CABINETS;
             }
-            require(
-                newMaxNumOfMaintaining < _numOfCabinets,
-                "the maxNumOfMaintaining must be less than numOfCabinets"
-            );
+            require(newMaxNumOfMaintaining < _numOfCabinets, "the maxNumOfMaintaining must be less than numOfCabinets");
             maxNumOfMaintaining = newMaxNumOfMaintaining;
         } else if (Memory.compareStrings(key, "maintainSlashScale")) {
-            require(
-                value.length == 32,
-                "length of maintainSlashScale mismatch"
-            );
-            uint256 newMaintainSlashScale = BytesToTypes.bytesToUint256(
-                32,
-                value
-            );
+            require(value.length == 32, "length of maintainSlashScale mismatch");
+            uint256 newMaintainSlashScale = BytesToTypes.bytesToUint256(32, value);
             require(
                 newMaintainSlashScale > 0 && newMaintainSlashScale < 10,
                 "the maintainSlashScale must be greater than 0 and less than 10"
             );
             maintainSlashScale = newMaintainSlashScale;
         } else if (Memory.compareStrings(key, "maxNumOfWorkingCandidates")) {
-            require(
-                value.length == 32,
-                "length of maxNumOfWorkingCandidates mismatch"
-            );
-            uint256 newMaxNumOfWorkingCandidates = BytesToTypes.bytesToUint256(
-                32,
-                value
-            );
+            require(value.length == 32, "length of maxNumOfWorkingCandidates mismatch");
+            uint256 newMaxNumOfWorkingCandidates = BytesToTypes.bytesToUint256(32, value);
             require(
                 newMaxNumOfWorkingCandidates <= maxNumOfCandidates,
                 "the maxNumOfWorkingCandidates must be not greater than maxNumOfCandidates"
             );
             maxNumOfWorkingCandidates = newMaxNumOfWorkingCandidates;
         } else if (Memory.compareStrings(key, "maxNumOfCandidates")) {
-            require(
-                value.length == 32,
-                "length of maxNumOfCandidates mismatch"
-            );
-            uint256 newMaxNumOfCandidates = BytesToTypes.bytesToUint256(
-                32,
-                value
-            );
+            require(value.length == 32, "length of maxNumOfCandidates mismatch");
+            uint256 newMaxNumOfCandidates = BytesToTypes.bytesToUint256(32, value);
             maxNumOfCandidates = newMaxNumOfCandidates;
             if (maxNumOfWorkingCandidates > maxNumOfCandidates) {
                 maxNumOfWorkingCandidates = maxNumOfCandidates;
@@ -777,48 +661,27 @@ contract BSCValidatorSet is
         } else if (Memory.compareStrings(key, "numOfCabinets")) {
             require(value.length == 32, "length of numOfCabinets mismatch");
             uint256 newNumOfCabinets = BytesToTypes.bytesToUint256(32, value);
-            require(
-                newNumOfCabinets > 0,
-                "the numOfCabinets must be greater than 0"
-            );
+            require(newNumOfCabinets > 0, "the numOfCabinets must be greater than 0");
 
-            uint256 maxElectedValidators = IStakeHub(STAKE_HUB_ADDR)
-                .maxElectedValidators();
+            uint256 maxElectedValidators = IStakeHub(STAKE_HUB_ADDR).maxElectedValidators();
             require(
-                newNumOfCabinets <= maxElectedValidators,
-                "the numOfCabinets must be less than maxElectedValidators"
+                newNumOfCabinets <= maxElectedValidators, "the numOfCabinets must be less than maxElectedValidators"
             );
 
             numOfCabinets = newNumOfCabinets;
         } else if (Memory.compareStrings(key, "systemRewardBaseRatio")) {
+            require(value.length == 32, "length of systemRewardBaseRatio mismatch");
+            uint256 newSystemRewardBaseRatio = BytesToTypes.bytesToUint256(32, value);
             require(
-                value.length == 32,
-                "length of systemRewardBaseRatio mismatch"
-            );
-            uint256 newSystemRewardBaseRatio = BytesToTypes.bytesToUint256(
-                32,
-                value
-            );
-            require(
-                newSystemRewardBaseRatio.add(burnRatio).add(
-                    systemRewardAntiMEVRatio
-                ) <= BLOCK_FEES_RATIO_SCALE,
+                newSystemRewardBaseRatio.add(burnRatio).add(systemRewardAntiMEVRatio) <= BLOCK_FEES_RATIO_SCALE,
                 "the systemRewardBaseRatio plus burnRatio and systemRewardAntiMEVRatio must be no greater than 10000"
             );
             systemRewardBaseRatio = newSystemRewardBaseRatio;
         } else if (Memory.compareStrings(key, "systemRewardAntiMEVRatio")) {
+            require(value.length == 32, "length of systemRewardAntiMEVRatio mismatch");
+            uint256 newSystemRewardAntiMEVRatio = BytesToTypes.bytesToUint256(32, value);
             require(
-                value.length == 32,
-                "length of systemRewardAntiMEVRatio mismatch"
-            );
-            uint256 newSystemRewardAntiMEVRatio = BytesToTypes.bytesToUint256(
-                32,
-                value
-            );
-            require(
-                newSystemRewardAntiMEVRatio.add(burnRatio).add(
-                    systemRewardBaseRatio
-                ) <= BLOCK_FEES_RATIO_SCALE,
+                newSystemRewardAntiMEVRatio.add(burnRatio).add(systemRewardBaseRatio) <= BLOCK_FEES_RATIO_SCALE,
                 "the systemRewardAntiMEVRatio plus burnRatio and systemRewardBaseRatio must be no greater than 10000"
             );
             systemRewardAntiMEVRatio = newSystemRewardAntiMEVRatio;
@@ -826,34 +689,29 @@ contract BSCValidatorSet is
             require(value.length == 32, "length of turnLength mismatch");
             uint256 newTurnLength = BytesToTypes.bytesToUint256(32, value);
             require(
-                (newTurnLength >= 3 && newTurnLength <= 64) ||
-                    newTurnLength == 1,
+                newTurnLength >= 3 && newTurnLength <= 64 || newTurnLength == 1,
                 "the turnLength should be in [3,64] or equal to 1"
             );
             turnLength = newTurnLength;
         } else if (Memory.compareStrings(key, "gasTreasuryRatio")) {
             require(value.length == 32, "length of gasTreasuryRatio mismatch");
-            uint256 newGasTreasuryRatio = BytesToTypes.bytesToUint256(
-                32,
-                value
-            );
-            require(
-                newGasTreasuryRatio <= gasTreasuryMaxRatio,
-                "gasTreasuryRatio too high"
-            );
+            uint256 newGasTreasuryRatio = BytesToTypes.bytesToUint256(32, value);
+            require(newGasTreasuryRatio <= gasTreasuryMaxRatio, "gasTreasuryRatio too high");
 
-            //            require(
-            //                newGasTreasuryRatio.add(burnRatio).add(systemRewardBaseRatio) <= BLOCK_FEES_RATIO_SCALE,
-            //                "the systemRewardAntiMEVRatio plus burnRatio and systemRewardBaseRatio must be no greater than 10000"
-            //            );
+
+//            require(
+//                newGasTreasuryRatio.add(burnRatio).add(systemRewardBaseRatio) <= BLOCK_FEES_RATIO_SCALE,
+//                "the systemRewardAntiMEVRatio plus burnRatio and systemRewardBaseRatio must be no greater than 10000"
+//            );
             require(
                 newGasTreasuryRatio
-                    .add(burnRatio)
-                    .add(systemRewardBaseRatio)
-                    .add(systemRewardAntiMEVRatio) <= BLOCK_FEES_RATIO_SCALE,
+                .add(burnRatio)
+                .add(systemRewardBaseRatio)
+                .add(systemRewardAntiMEVRatio)
+                <= BLOCK_FEES_RATIO_SCALE,
                 "sum of fee ratios exceeds 100%"
             );
-            //            uint256 oldRatio = gasTreasuryRatio;
+//            uint256 oldRatio = gasTreasuryRatio;
 
             uint256 oldRatio;
             assembly {
@@ -861,18 +719,15 @@ contract BSCValidatorSet is
                 sstore(GAS_TREASURY_RATIO_SLOT, newGasTreasuryRatio)
             }
 
-            //            gasTreasuryRatio = newGasTreasuryRatio;
+//            gasTreasuryRatio = newGasTreasuryRatio;
             emit GasTreasuryRatioUpdated(oldRatio, newGasTreasuryRatio);
         } else if (Memory.compareStrings(key, "gasTreasuryAddr")) {
             require(value.length == 32, "length of gasTreasuryAddr mismatch");
             address newGasTreasuryAddr = abi.decode(value, (address));
+            require(newGasTreasuryAddr != address(0), "invalid gasTreasuryAddr");
             require(
-                newGasTreasuryAddr != address(0),
-                "invalid gasTreasuryAddr"
-            );
-            require(
-                newGasTreasuryAddr != SYSTEM_REWARD_ADDR &&
-                    newGasTreasuryAddr != BURN_ADDRESS,
+                newGasTreasuryAddr != SYSTEM_REWARD_ADDR
+                && newGasTreasuryAddr != BURN_ADDRESS,
                 "invalid treasury addr"
             );
             address oldAddr;
@@ -888,10 +743,7 @@ contract BSCValidatorSet is
     }
 
     /*----------------- Internal Functions -----------------*/
-    function doUpdateState(
-        Validator[] memory newValidatorSet,
-        bytes[] memory newVoteAddrs
-    ) private {
+    function doUpdateState(Validator[] memory newValidatorSet, bytes[] memory newVoteAddrs) private {
         uint256 n = currentValidatorSet.length;
         uint256 m = newValidatorSet.length;
 
@@ -900,10 +752,7 @@ contract BSCValidatorSet is
             bool stale = true;
             Validator memory oldValidator = currentValidatorSet[i];
             for (uint256 j; j < m; ++j) {
-                if (
-                    oldValidator.consensusAddress ==
-                    newValidatorSet[j].consensusAddress
-                ) {
+                if (oldValidator.consensusAddress == newValidatorSet[j].consensusAddress) {
                     stale = false;
                     break;
                 }
@@ -925,23 +774,15 @@ contract BSCValidatorSet is
         for (uint256 i; i < k; ++i) {
             // if the validator is not the same, update the validator set directly
             if (!isSameValidator(newValidatorSet[i], currentValidatorSet[i])) {
-                currentValidatorSetMap[newValidatorSet[i].consensusAddress] =
-                    i +
-                    1;
+                currentValidatorSetMap[newValidatorSet[i].consensusAddress] = i + 1;
                 currentValidatorSet[i] = newValidatorSet[i];
                 validatorExtraSet[i].voteAddress = newVoteAddrs[i];
                 validatorExtraSet[i].isMaintaining = false;
                 validatorExtraSet[i].enterMaintenanceHeight = 0;
             } else {
-                currentValidatorSet[i].votingPower = newValidatorSet[i]
-                    .votingPower;
+                currentValidatorSet[i].votingPower = newValidatorSet[i].votingPower;
                 // update the vote address if it is different
-                if (
-                    !BytesLib.equal(
-                        newVoteAddrs[i],
-                        validatorExtraSet[i].voteAddress
-                    )
-                ) {
+                if (!BytesLib.equal(newVoteAddrs[i], validatorExtraSet[i].voteAddress)) {
                     validatorExtraSet[i].voteAddress = newVoteAddrs[i];
                 }
             }
@@ -953,9 +794,7 @@ contract BSCValidatorSet is
                 _validatorExtra.voteAddress = newVoteAddrs[i];
                 currentValidatorSet.push(newValidatorSet[i]);
                 validatorExtraSet.push(_validatorExtra);
-                currentValidatorSetMap[newValidatorSet[i].consensusAddress] =
-                    i +
-                    1;
+                currentValidatorSetMap[newValidatorSet[i].consensusAddress] = i + 1;
             }
         }
 
@@ -986,9 +825,7 @@ contract BSCValidatorSet is
         uint256 modNumber
     ) internal pure {
         for (uint256 i; i < limit; ++i) {
-            uint256 random = uint256(
-                keccak256(abi.encodePacked(shuffleNumber, startIdx + i))
-            ) % modNumber;
+            uint256 random = uint256(keccak256(abi.encodePacked(shuffleNumber, startIdx + i))) % modNumber;
             if ((startIdx + i) != (offset + random)) {
                 address tmpAddr = validators[startIdx + i];
                 bytes memory tmpBLS = voteAddrs[startIdx + i];
@@ -1005,19 +842,12 @@ contract BSCValidatorSet is
      *
      * Vote address is not considered
      */
-    function isSameValidator(
-        Validator memory v1,
-        Validator memory v2
-    ) private pure returns (bool) {
-        return
-            v1.consensusAddress == v2.consensusAddress &&
-            v1.feeAddress == v2.feeAddress &&
-            v1.BBCFeeAddress == v2.BBCFeeAddress;
+    function isSameValidator(Validator memory v1, Validator memory v2) private pure returns (bool) {
+        return v1.consensusAddress == v2.consensusAddress && v1.feeAddress == v2.feeAddress
+            && v1.BBCFeeAddress == v2.BBCFeeAddress;
     }
 
-    function getVoteAddresses(
-        address[] memory validators
-    ) internal view returns (bytes[] memory) {
+    function getVoteAddresses(address[] memory validators) internal view returns (bytes[] memory) {
         uint256 n = currentValidatorSet.length;
         uint256 length = validators.length;
         bytes[] memory voteAddrs = new bytes[](length);
@@ -1028,9 +858,7 @@ contract BSCValidatorSet is
         }
 
         for (uint256 i; i < length; ++i) {
-            voteAddrs[i] = validatorExtraSet[
-                currentValidatorSetMap[validators[i]] - 1
-            ].voteAddress;
+            voteAddrs[i] = validatorExtraSet[currentValidatorSetMap[validators[i]] - 1].voteAddress;
         }
         return voteAddrs;
     }
@@ -1054,12 +882,7 @@ contract BSCValidatorSet is
 
         uint256 k = n < m ? n : m;
         for (uint256 i; i < k; ++i) {
-            if (
-                !BytesLib.equal(
-                    previousVoteAddrFullSet[i],
-                    currentVoteAddrFullSet[i]
-                )
-            ) {
+            if (!BytesLib.equal(previousVoteAddrFullSet[i], currentVoteAddrFullSet[i])) {
                 previousVoteAddrFullSet[i] = currentVoteAddrFullSet[i];
             }
         }
@@ -1083,12 +906,7 @@ contract BSCValidatorSet is
 
         uint256 k = n < m ? n : m;
         for (uint256 i; i < k; ++i) {
-            if (
-                !BytesLib.equal(
-                    currentVoteAddrFullSet[i],
-                    validatorExtraSet[i].voteAddress
-                )
-            ) {
+            if (!BytesLib.equal(currentVoteAddrFullSet[i], validatorExtraSet[i].voteAddress)) {
                 currentVoteAddrFullSet[i] = validatorExtraSet[i].voteAddress;
             }
         }
@@ -1100,9 +918,7 @@ contract BSCValidatorSet is
         }
     }
 
-    function isMonitoredForMaliciousVote(
-        bytes calldata voteAddr
-    ) external view override returns (bool) {
+    function isMonitoredForMaliciousVote(bytes calldata voteAddr) external view override returns (bool) {
         uint256 m = currentVoteAddrFullSet.length;
         for (uint256 i; i < m; ++i) {
             if (BytesLib.equal(voteAddr, currentVoteAddrFullSet[i])) {
@@ -1141,15 +957,11 @@ contract BSCValidatorSet is
         uint256 averageDistribute = income / rest;
         if (averageDistribute != 0) {
             for (uint256 i; i < index; ++i) {
-                currentValidatorSet[i].incoming = currentValidatorSet[i]
-                    .incoming
-                    .add(averageDistribute);
+                currentValidatorSet[i].incoming = currentValidatorSet[i].incoming.add(averageDistribute);
             }
             uint256 n = currentValidatorSet.length;
             for (uint256 i = index + 1; i < n; ++i) {
-                currentValidatorSet[i].incoming = currentValidatorSet[i]
-                    .incoming
-                    .add(averageDistribute);
+                currentValidatorSet[i].incoming = currentValidatorSet[i].incoming.add(averageDistribute);
             }
         }
 
@@ -1172,9 +984,7 @@ contract BSCValidatorSet is
         for (uint256 i = index; i < (currentValidatorSet.length - 1); ++i) {
             currentValidatorSet[i] = currentValidatorSet[i + 1];
             validatorExtraSet[i] = validatorExtraSet[i + 1];
-            currentValidatorSetMap[currentValidatorSet[i].consensusAddress] =
-                i +
-                1;
+            currentValidatorSetMap[currentValidatorSet[i].consensusAddress] = i + 1;
         }
         currentValidatorSet.pop();
         validatorExtraSet.pop();
@@ -1184,9 +994,7 @@ contract BSCValidatorSet is
         if (averageDistribute != 0) {
             uint256 n = currentValidatorSet.length;
             for (uint256 i; i < n; ++i) {
-                currentValidatorSet[i].incoming = currentValidatorSet[i]
-                    .incoming
-                    .add(averageDistribute);
+                currentValidatorSet[i].incoming = currentValidatorSet[i].incoming.add(averageDistribute);
             }
         }
         return true;
@@ -1195,13 +1003,7 @@ contract BSCValidatorSet is
     function _forceMaintainingValidatorsExit(
         Validator[] memory _validatorSet,
         bytes[] memory _voteAddrs
-    )
-        private
-        returns (
-            Validator[] memory unjailedValidatorSet,
-            bytes[] memory unjailedVoteAddrs
-        )
-    {
+    ) private returns (Validator[] memory unjailedValidatorSet, bytes[] memory unjailedVoteAddrs) {
         uint256 numOfFelony = 0;
         address validator;
         bool isFelony;
@@ -1223,30 +1025,23 @@ contract BSCValidatorSet is
             validator = currentValidatorSet[i].consensusAddress;
 
             // exit maintenance
-            isFelony = _exitMaintenance(
-                validator,
-                i,
-                miningValidatorCount,
-                false
-            );
+            isFelony = _exitMaintenance(validator, i, miningValidatorCount, false);
             if (!isFelony) {
                 continue;
             }
 
             // get the latest consensus address
             address latestConsensusAddress;
-            address operatorAddress = IStakeHub(STAKE_HUB_ADDR)
-                .consensusToOperator(validator);
+            address operatorAddress = IStakeHub(STAKE_HUB_ADDR).consensusToOperator(validator);
             if (operatorAddress != address(0)) {
-                latestConsensusAddress = IStakeHub(STAKE_HUB_ADDR)
-                    .getValidatorConsensusAddress(operatorAddress);
+                latestConsensusAddress = IStakeHub(STAKE_HUB_ADDR).getValidatorConsensusAddress(operatorAddress);
             }
 
             // record the jailed validator in validatorSet
             for (uint256 j; j < _validatorSet.length; ++j) {
                 if (
-                    _validatorSet[j].consensusAddress == validator ||
-                    _validatorSet[j].consensusAddress == latestConsensusAddress
+                    _validatorSet[j].consensusAddress == validator
+                    || _validatorSet[j].consensusAddress == latestConsensusAddress
                 ) {
                     _validatorSet[j].jailed = true;
                     break;
@@ -1256,10 +1051,7 @@ contract BSCValidatorSet is
 
         // count the number of felony validators
         for (uint256 k; k < _validatorSet.length; ++k) {
-            if (
-                _validatorSet[k].jailed ||
-                _validatorSet[k].consensusAddress == address(0)
-            ) {
+            if (_validatorSet[k].jailed || _validatorSet[k].consensusAddress == address(0)) {
                 ++numOfFelony;
             }
         }
@@ -1273,16 +1065,11 @@ contract BSCValidatorSet is
             unjailedVoteAddrs[0] = _voteAddrs[0];
             unjailedValidatorSet[0].jailed = false;
         } else {
-            unjailedValidatorSet = new Validator[](
-                _validatorSet.length - numOfFelony
-            );
+            unjailedValidatorSet = new Validator[](_validatorSet.length - numOfFelony);
             unjailedVoteAddrs = new bytes[](_validatorSet.length - numOfFelony);
             i = 0;
             for (uint256 index; index < _validatorSet.length; ++index) {
-                if (
-                    !_validatorSet[index].jailed &&
-                    _validatorSet[index].consensusAddress != address(0)
-                ) {
+                if (!_validatorSet[index].jailed && _validatorSet[index].consensusAddress != address(0)) {
                     unjailedValidatorSet[i] = _validatorSet[index];
                     unjailedVoteAddrs[i] = _voteAddrs[index];
                     ++i;
@@ -1306,11 +1093,7 @@ contract BSCValidatorSet is
         uint256 miningValidatorCount,
         bool shouldRevert
     ) private returns (bool isFelony) {
-        if (
-            maintainSlashScale == 0 ||
-            miningValidatorCount == 0 ||
-            numOfMaintaining == 0
-        ) {
+        if (maintainSlashScale == 0 || miningValidatorCount == 0 || numOfMaintaining == 0) {
             // should not happen, still protect
             return false;
         }
@@ -1319,28 +1102,19 @@ contract BSCValidatorSet is
         --numOfMaintaining;
 
         // step 1: calculate slashCount
-        uint256 slashCount = block
-            .number
-            .sub(validatorExtraSet[index].enterMaintenanceHeight)
-            .div(miningValidatorCount)
+        uint256 slashCount = block.number.sub(validatorExtraSet[index].enterMaintenanceHeight).div(miningValidatorCount)
             .div(maintainSlashScale);
 
         // step 2: clear isMaintaining info
         validatorExtraSet[index].isMaintaining = false;
 
         // step 3: slash the validator
-        (
-            uint256 misdemeanorThreshold,
-            uint256 felonyThreshold
-        ) = ISlashIndicator(SLASH_CONTRACT_ADDR).getSlashThresholds();
+        (uint256 misdemeanorThreshold, uint256 felonyThreshold) =
+                                ISlashIndicator(SLASH_CONTRACT_ADDR).getSlashThresholds();
         isFelony = false;
         if (slashCount >= felonyThreshold) {
             _felony(validator, index);
-            ISlashIndicator(SLASH_CONTRACT_ADDR).downtimeSlash(
-                validator,
-                slashCount,
-                shouldRevert
-            );
+            ISlashIndicator(SLASH_CONTRACT_ADDR).downtimeSlash(validator, slashCount, shouldRevert);
             isFelony = true;
         } else if (slashCount >= misdemeanorThreshold) {
             _misdemeanor(validator);
@@ -1349,9 +1123,11 @@ contract BSCValidatorSet is
         emit validatorExitMaintenance(validator);
     }
 
-    function decodeValidatorSet(
-        bytes memory msgBytes
-    ) internal pure returns (ValidatorSetPackage memory, bool) {
+    function decodeValidatorSet(bytes memory msgBytes)
+    internal
+    pure
+    returns (ValidatorSetPackage memory, bool)
+    {
         ValidatorSetPackage memory validatorSetPkg;
 
         RLPDecode.Iterator memory iter = msgBytes.toRLPItem().iterator();
@@ -1365,11 +1141,7 @@ contract BSCValidatorSet is
                 validatorSetPkg.validatorSet = new Validator[](items.length);
                 validatorSetPkg.voteAddrs = new bytes[](items.length);
                 for (uint256 j; j < items.length; ++j) {
-                    (
-                        Validator memory val,
-                        bytes memory voteAddr,
-                        bool ok
-                    ) = decodeValidator(items[j]);
+                    (Validator memory val, bytes memory voteAddr, bool ok) = decodeValidator(items[j]);
                     if (!ok) {
                         return (validatorSetPkg, false);
                     }
@@ -1385,9 +1157,11 @@ contract BSCValidatorSet is
         return (validatorSetPkg, success);
     }
 
-    function decodeValidator(
-        RLPDecode.RLPItem memory itemValidator
-    ) internal pure returns (Validator memory, bytes memory, bool) {
+    function decodeValidator(RLPDecode.RLPItem memory itemValidator)
+    internal
+    pure
+    returns (Validator memory, bytes memory, bool)
+    {
         Validator memory validator;
         bytes memory voteAddr;
         RLPDecode.Iterator memory iter = itemValidator.iterator();
@@ -1397,9 +1171,7 @@ contract BSCValidatorSet is
             if (idx == 0) {
                 validator.consensusAddress = iter.next().toAddress();
             } else if (idx == 1) {
-                validator.feeAddress = address(
-                    uint160(iter.next().toAddress())
-                );
+                validator.feeAddress = address(uint160(iter.next().toAddress()));
             } else if (idx == 2) {
                 validator.BBCFeeAddress = iter.next().toAddress();
             } else if (idx == 3) {
@@ -1427,4 +1199,6 @@ contract BSCValidatorSet is
             addr := sload(GAS_TREASURY_ADDR_SLOT)
         }
     }
+
+
 }
