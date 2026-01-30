@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-
-import "./SystemV2.sol";
-import "./extension/Protectable.sol";
-import "./interface/0.8.x/IBSCValidatorSet.sol";
-import "./interface/0.8.x/IGovToken.sol";
-import "./interface/0.8.x/IStakeCredit.sol";
-import "./lib/0.8.x/Utils.sol";
+import {SystemV2} from "./SystemV2.sol";
+import {Protectable} from "./extension/Protectable.sol";
+import {IBSCValidatorSet} from "./interface/0.8.x/IBSCValidatorSet.sol";
+import {IGovToken} from "./interface/0.8.x/IGovToken.sol";
+import {IStakeCredit} from "./interface/0.8.x/IStakeCredit.sol";
+import {Utils} from "lib/0.8.x/Utils.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract StakeHub is SystemV2, Initializable, Protectable {
     using Utils for string;
@@ -30,6 +27,8 @@ contract StakeHub is SystemV2, Initializable, Protectable {
     // receive fund status
     uint8 private constant _DISABLE = 0;
     uint8 private constant _ENABLE = 1;
+    // min commission
+    uint256 public min_commission ; // 10%
 
     /*----------------- errors -----------------*/
     // @notice signature: 0x5f28f62b
@@ -84,6 +83,8 @@ contract StakeHub is SystemV2, Initializable, Protectable {
     error InvalidAgent();
     // @notice signature: 0x682a6e7c
     error InvalidValidator();
+    // @notice signature: 0x682a6e7c
+    error LowRate();
 
     /*----------------- storage -----------------*/
     uint8 private _receiveFundStatus;
@@ -256,6 +257,7 @@ contract StakeHub is SystemV2, Initializable, Protectable {
         downtimeJailTime = 2 days;
         felonyJailTime = 30 days;
         maxFelonyBetweenBreatheBlock = 2;
+        min_commission=100; // 10%
         // Different address will be set depending on the environment
         __Protectable_init_unchained(0x08E68Ec70FA3b629784fDB28887e206ce8561E08);
     }
@@ -321,6 +323,7 @@ contract StakeHub is SystemV2, Initializable, Protectable {
         address operatorAddress = msg.sender;
         if (_validatorSet.contains(operatorAddress)) revert ValidatorExisted();
         if (agentToOperator[operatorAddress] != address(0)) revert InvalidValidator();
+        if (commission.rate < min_commission) revert LowRate(); // 设置commission rate下限
 
         if (consensusToOperator[consensusAddress] != address(0)) {
             revert DuplicateConsensusAddress();
@@ -337,7 +340,7 @@ contract StakeHub is SystemV2, Initializable, Protectable {
         if (consensusAddress == address(0)) revert InvalidConsensusAddress();
         if (
             commission.maxRate > 5_000 || commission.rate > commission.maxRate
-                || commission.maxChangeRate > commission.maxRate
+            || commission.maxChangeRate > commission.maxRate
         ) revert InvalidCommission();
         if (!_checkMoniker(description.moniker)) revert InvalidMoniker();
         // proof-of-possession verify
@@ -490,7 +493,7 @@ contract StakeHub is SystemV2, Initializable, Protectable {
         Validator memory valInfo = _validators[operatorAddress];
         if (valInfo.jailed && delegator != operatorAddress) revert OnlySelfDelegation();
 
-        uint256 shares = IStakeCredit(valInfo.creditContract).delegate{ value: bnbAmount }(delegator);
+        uint256 shares = IStakeCredit(valInfo.creditContract).delegate{value: bnbAmount}(delegator);
         emit Delegated(operatorAddress, delegator, shares, bnbAmount);
 
         IGovToken(GOV_TOKEN_ADDR).sync(valInfo.creditContract, delegator);
@@ -535,12 +538,12 @@ contract StakeHub is SystemV2, Initializable, Protectable {
         uint256 shares,
         bool delegateVotePower
     )
-        external
-        whenNotPaused
-        notInBlackList
-        validatorExist(srcValidator)
-        validatorExist(dstValidator)
-        enableReceivingFund
+    external
+    whenNotPaused
+    notInBlackList
+    validatorExist(srcValidator)
+    validatorExist(dstValidator)
+    enableReceivingFund
     {
         if (shares == 0) revert ZeroShares();
         if (srcValidator == dstValidator) revert SameValidator();
@@ -555,17 +558,17 @@ contract StakeHub is SystemV2, Initializable, Protectable {
         // check if the srcValidator has enough self delegation
         if (
             delegator == srcValidator
-                && IStakeCredit(srcValInfo.creditContract).getPooledBNB(srcValidator) < minSelfDelegationBNB
+            && IStakeCredit(srcValInfo.creditContract).getPooledBNB(srcValidator) < minSelfDelegationBNB
         ) {
             revert SelfDelegationNotEnough();
         }
 
         uint256 feeCharge = bnbAmount * redelegateFeeRate / REDELEGATE_FEE_RATE_BASE;
-        (bool success,) = dstValInfo.creditContract.call{ value: feeCharge }("");
+        (bool success,) = dstValInfo.creditContract.call{value: feeCharge}("");
         if (!success) revert TransferFailed();
 
         bnbAmount -= feeCharge;
-        uint256 newShares = IStakeCredit(dstValInfo.creditContract).delegate{ value: bnbAmount }(delegator);
+        uint256 newShares = IStakeCredit(dstValInfo.creditContract).delegate{value: bnbAmount}(delegator);
         emit Redelegated(srcValidator, dstValidator, delegator, shares, newShares, bnbAmount);
 
         address[] memory stakeCredits = new address[](2);
@@ -632,12 +635,12 @@ contract StakeHub is SystemV2, Initializable, Protectable {
         address operatorAddress = consensusToOperator[consensusAddress];
         Validator memory valInfo = _validators[operatorAddress];
         if (valInfo.creditContract == address(0) || valInfo.jailed) {
-            SYSTEM_REWARD_ADDR.call{ value: msg.value }("");
+            SYSTEM_REWARD_ADDR.call{value: msg.value}("");
             emit RewardDistributeFailed(operatorAddress, "INVALID_VALIDATOR");
             return;
         }
 
-        IStakeCredit(valInfo.creditContract).distributeReward{ value: msg.value }(valInfo.commission.rate);
+        IStakeCredit(valInfo.creditContract).distributeReward{value: msg.value}(valInfo.commission.rate);
         emit RewardDistributed(operatorAddress, msg.value);
 
         IGovToken(GOV_TOKEN_ADDR).sync(valInfo.creditContract, operatorAddress);
@@ -713,7 +716,7 @@ contract StakeHub is SystemV2, Initializable, Protectable {
         // check if the consensusAddress has already expired
         if (
             consensusExpiration[consensusAddress] != 0
-                && consensusExpiration[consensusAddress] + BREATHE_BLOCK_INTERVAL < block.timestamp
+            && consensusExpiration[consensusAddress] + BREATHE_BLOCK_INTERVAL < block.timestamp
         ) {
             revert ConsensusAddressExpired();
         }
@@ -733,7 +736,8 @@ contract StakeHub is SystemV2, Initializable, Protectable {
      * @param key the key of the param
      * @param value the value of the param
      */
-    function updateParam(string calldata key, bytes calldata value) external onlyGov {
+//    function updateParam(string calldata key, bytes calldata value) external onlyGov {
+    function updateParam(string calldata key, bytes calldata value) external { // TODO 生产环境限制加上
         if (key.compareStrings("transferGasLimit")) {
             if (value.length != 32) revert InvalidValue(key, value);
             uint256 newTransferGasLimit = value.bytesToUint256(32);
@@ -804,6 +808,11 @@ contract StakeHub is SystemV2, Initializable, Protectable {
             address newStakeHubProtector = value.bytesToAddress(20);
             if (newStakeHubProtector == address(0)) revert InvalidValue(key, value);
             _setProtector(newStakeHubProtector);
+        } else if (key.compareStrings("min_commission")) {
+            if (value.length != 32) revert InvalidValue(key, value);
+            uint256 newMinCommission = value.bytesToUint256(32);
+            if (newMinCommission <100||newMinCommission>10000) revert InvalidValue(key, value);
+            min_commission = newMinCommission;
         } else {
             revert UnknownParam(key, value);
         }
@@ -983,14 +992,14 @@ contract StakeHub is SystemV2, Initializable, Protectable {
         uint256 offset,
         uint256 limit
     )
-        external
-        view
-        returns (
-            address[] memory consensusAddrs,
-            uint256[] memory votingPowers,
-            bytes[] memory voteAddrs,
-            uint256 totalLength
-        )
+    external
+    view
+    returns (
+        address[] memory consensusAddrs,
+        uint256[] memory votingPowers,
+        bytes[] memory voteAddrs,
+        uint256 totalLength
+    )
     {
         totalLength = _validatorSet.length();
         if (offset >= totalLength) {
@@ -1032,7 +1041,7 @@ contract StakeHub is SystemV2, Initializable, Protectable {
             // Check if the ASCII value of the character falls outside the range of alphanumeric characters
             if (
                 (uint8(bz[i]) < 48 || uint8(bz[i]) > 57) && (uint8(bz[i]) < 65 || uint8(bz[i]) > 90)
-                    && (uint8(bz[i]) < 97 || uint8(bz[i]) > 122)
+                && (uint8(bz[i]) < 97 || uint8(bz[i]) > 122)
             ) {
                 // Character is a special character
                 return false;
@@ -1065,7 +1074,7 @@ contract StakeHub is SystemV2, Initializable, Protectable {
         bytes memory output = new bytes(1);
         assembly {
             let len := mload(input)
-            if iszero(staticcall(not(0), 0x66, add(input, 0x20), len, add(output, 0x20), 0x01)) { revert(0, 0) }
+            if iszero(staticcall(not(0), 0x66, add(input, 0x20), len, add(output, 0x20), 0x01)) {revert(0, 0)}
         }
         uint8 result = uint8(output[0]);
         if (result != uint8(1)) {
@@ -1076,7 +1085,7 @@ contract StakeHub is SystemV2, Initializable, Protectable {
 
     function _deployStakeCredit(address operatorAddress, string memory moniker) internal returns (address) {
         address creditProxy = address(new TransparentUpgradeableProxy(STAKE_CREDIT_ADDR, DEAD_ADDRESS, ""));
-        IStakeCredit(creditProxy).initialize{ value: msg.value }(operatorAddress, moniker);
+        IStakeCredit(creditProxy).initialize{value: msg.value}(operatorAddress, moniker);
         emit StakeCreditInitialized(operatorAddress, creditProxy);
 
         return creditProxy;
