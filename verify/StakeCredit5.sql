@@ -23,7 +23,7 @@ INSERT INTO "public"."smart_contracts" ("name",
                                         "verified_via_verifier_alliance",
                                         "certified",
                                         "is_blueprint")
-VALUES ('StakeCredit',
+VALUES ('Stake Val005 Credit',
         'v0.8.22+commit.4fc1097e',
         't',
         '',
